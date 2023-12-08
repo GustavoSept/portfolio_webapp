@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="eng">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <title>{% block title %}{% endblock %}</title>
+
+    <style>
+      .nav-icon img { /* Icons on the right */
+        width: auto; /* Maintain aspect ratio */
+        height: 1vw; 
+      }
+
+      .nav-icon { /* Icons on the right */
+        padding: 0 0.66vw;
+      }
+    
+      
+      .navbar-nav { /* Menus at the center */
+        margin-right: auto;
+        margin-left: auto;
+        padding: 1vw 0; /* sets the height of the nav-bar */
+      }
+
+      .navbar-nav .nav-item {
+        margin-right: 2.5vw; /* Adjust as needed */
+      }
+    </style>
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <!-- Logo, fill with real file later -->
+        <a class="navbar-brand" href="#">
+          <img src="/path/to/logo.png" alt="Logo" style="height: 30px;">
+        </a>
+
+        <!-- Toggler for mobile views -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navbar links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Projects
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="#">Economic Freedom Analysis</a></li>
+                  <div><h3> </h3></div> <!-- blank space -->
+
+                  <li><a class="dropdown-item" href="#">Portfolio Balancing Simulator</a></li>
+                  <div><h3> </h3></div> <!-- blank space -->
+                  
+                  <li><a class="dropdown-item" href="#">Compound Interest Calculator</a></li>
+                </ul>
+              </li>
+            
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Educational Journey</a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Contact</a>
+            </li>
+            
+
+          <!-- Icons on the right -->
+          <div class="d-flex">
+            <a class="nav-icon position-relative text-decoration-none" href="#">
+              <img src="{{ url_for('static', filename='icons/github.svg') }}" alt="Setting Icon">
+            </a>
+
+            <a class="nav-icon position-relative text-decoration-none" href="#">
+              <img src="{{ url_for('static', filename='icons/linkedin.svg') }}" alt="Profile Icon">
+            </a>
+
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    {% block content %} 
+
+    {% endblock %}
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  </body>
+</html>
