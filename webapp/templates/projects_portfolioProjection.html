@@ -4,7 +4,95 @@
     Investment Portfolio Projection
 {% endblock %}
 
+{% block headContent %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.delete-button').click(function() {
+            var investmentId = $(this).data('id');
+            deleteRow(investmentId);
+        });
+    });
+
+    function deleteRow(investmentId) {
+        $.ajax({
+            url: '/delete-investment',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({investment_id: investmentId}),
+            success: function(response) {
+                if(response.status === 'success') {
+                    $('tr[data-id="' + investmentId + '"]').remove();
+                } else {
+                    console.log('Error: ', response);
+                }
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });        
+    }
+
+</script>
+{% endblock %}
+
 {% block content %}
-    <h1>Content Dashboard Graphs</h1>
-    <iframe src="/dash/" style="width:100%; height:4098px;"></iframe>
+    <div class="container-xxl"> 
+        <table class="table table-striped table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Actions</th>
+                    <th>Investment ID</th>
+                    <th>Ideal Proportion (%)</th>
+                    <th>Investment Strategy</th>
+                    <th>Expected Growth (%)</th>
+                    <th>Random Growth</th>
+                    <th>Asset Volatility</th>
+                    <th>Growth Decay</th>
+                    <th>Volatility Duration</th>
+                    <th>Volatility Magnitude</th>
+                    <th>Volatility Phase</th>
+                    <th>BullBear Duration</th>
+                    <th>BullBear Magnitude</th>
+                    <th>BullBear Phase</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for investment in investments %}
+                <tr data-id="{{ investment.investment_id }}">
+                    <td>
+                        <div class="d-flex justify-content-start">
+                            <!-- Delete Button -->
+                            <button type="button" class="btn btn-danger btn-sm me-1 delete-button" data-id="{{ investment.investment_id }}">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            
+                        </div>
+                    </td>
+                    <td>{{ investment.investment_id }}</td>
+                    <td>{{ investment.ideal_proportion }}</td>
+                    <td>{{ investment.investment_strategy }}</td>
+                    <td>{{ investment.expected_growth }}</td>
+                    <td>{{ investment.random_growth }}</td>
+                    <td>{{ investment.asset_volatility }}</td>
+                    <td>{{ investment.growth_decay }}</td>
+                    <td>{{ investment.volatility_duration }}</td>
+                    <td>{{ investment.volatility_magnitude }}</td>
+                    <td>{{ investment.volatility_phase }}</td>
+                    <td>{{ investment.bullbear_duration }}</td>
+                    <td>{{ investment.bullbear_magnitude }}</td>
+                    <td>{{ investment.bullbear_phase }}</td>
+                </tr>
+                {% endfor %}                
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-primary">Add New Investment</button>
+        <p> </p>
+
+    </div>
+    <div class="container-xxl"> 
+        <iframe src="/dash/" style="width:100%; height:4098px;"></iframe>
+    </div>
 {% endblock %}
