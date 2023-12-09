@@ -52,3 +52,16 @@ def delete_investment():
     session['investments'] = investmentsList  # Reassigning to session to force update
 
     return {'status': 'success'}
+
+
+@application.route('/add-investment', methods=['POST'])
+def add_investment():
+    data = request.get_json()
+
+    if 'investments' not in session:
+        session['investments'] = []
+
+    session['investments'].append(data)
+    session['investments'] = session['investments'] # Reassigning to session to force update
+
+    return {'status': 'success'}
