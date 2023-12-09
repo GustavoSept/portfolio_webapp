@@ -267,7 +267,7 @@ dash_app.layout = dbc.Container([
                 ],
                 style={'height': '100%', 'display': 'flex', 'alignItems': 'flex-start'}
             ),
-        ], style={'width': '50%', 'marginLeft': '20%', 'marginRight': '20%'})
+        ])
     )  
 ], fluid=True, style={'marginTop': '20px'})
 
