@@ -1,3 +1,5 @@
+from webapp import application
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc
@@ -20,9 +22,11 @@ portfolioSettings = {
     'Investment Time (years)': 2
 }
 
+from webapp import application
 
-app = Flask(__name__)
-dash_app = dash.Dash(__name__, server=app, external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix='/dash/')
+
+# Initialize Dash app with the existing Flask server
+dash_app = dash.Dash(__name__, server=application, external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix='/dash/')
 server = dash_app.server
 
 TOOLTIP_STYLE = {"background-color": "black", "color": "white", "border-radius": "5px"}
