@@ -723,5 +723,5 @@ def toggle_table_display(flag):
 
 
 if __name__ == '__main__':
-    investments = []  # Reset the investments list on server restart or page refresh
-    app.run(debug=True)
+    #investments = []  # Reset the investments list on server restart or page refresh
+    application.run(debug=True)
