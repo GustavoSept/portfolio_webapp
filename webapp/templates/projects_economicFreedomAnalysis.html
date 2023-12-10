@@ -5,5 +5,33 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Economic Freedom Analysis</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-6 bg-light p-5 border">
+            <h1>Economic Freedom Analysis</h1>
+            <div class="flourish-embed shadow-lg p-3 mb-5 bg-body rounded" data-src="story/2115728" style="min-height: 1500px;">
+                <script src="https://public.flourish.studio/resources/embed.js"></script>
+            </div>
+            
+
+            <!-- Divider -->
+            <hr class="my-4">
+
+            <!-- GitHub Link -->
+            <h2>Check complete analysis at:</h2>
+            <p><a href="https://github.com/GustavoSept/Economic_Freedom_Analysis" target="_blank">github.com/GustavoSept/Economic_Freedom_Analysis</a></p>
+            <p>There, you can find data sources and python code in jupyter notebooks showcasing how the analysis was conducted, with some additional charts and data.</p>
+
+            <h4>Tested Models:</h4>
+                <ul>
+                    <li>Linear Regression</li>
+                    <li>Polynomial Regression</li>
+                    <li>KNN Regression</li>
+                    <li>Regression Tree</li>
+                    <li>Random Forest Regressor</li>
+                    <li>Gradient Boosting Regressor</li>
+                </ul>
+        </div>
+    </div>
+
 {% endblock %}
