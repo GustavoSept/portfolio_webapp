@@ -4,10 +4,10 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash import dash_table
 from dash import no_update
-from flask import Flask
+from flask import Flask, session
 import pandas as pd
 import numpy as np
 
@@ -38,188 +38,8 @@ MAX_INVESTMENT_TIME = 20
 dash_app.layout = dbc.Container([
     dbc.Row(
         dbc.Col([
+
             html.H1('Portfolio Value Projection', style={'textAlign': 'center', 'padding': '20px'}),
-            
-            # Investment Settings
-            html.Div([
-                html.H6('Investment Settings', style={**H6_STYLE, 'color': '#0a8a06'}),
-                dbc.Row([
-                    dbc.Col([
-                        html.Label('Investment ID', style=LABEL_STYLE),
-                        dcc.Input(id='investment-type', type='text', placeholder='Enter Investment ID', style={'width': '100%'}),
-                        dbc.Tooltip("Enter the name or code of the investment",
-                                    target="investment-type",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    )
-                    ], width=6, align="center"),
-                    
-                    dbc.Col([
-                        html.Label('Investment Strategy', style=LABEL_STYLE),
-                        dcc.Dropdown(id='risk-strategy', options=[
-                            {'label': 'Conservative', 'value': 'conservative'},
-                            {'label': 'Medium', 'value': 'medium'},
-                            {'label': 'Risky', 'value': 'risky'}
-                        ], value='risky'),
-                        dbc.Tooltip("Set selling-point distance from ideal proportion. The riskier, the less often the asset is sold.",
-                                    target="risk-strategy",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    )
-                    ], width=6, align="center")
-                ]),
-
-                html.Label('Ideal Proportion (%)', style=LABEL_STYLE),
-                dcc.Slider(id='ideal-proportion-slider', min=0, max=100, step=1, value=50, 
-                           marks={i: str(i) + "%" for i in range(0, 101, 10)}),
-                dbc.Tooltip("Set the desired portfolio percentage for this investment. This slider can also be treated as weighted proportions.",
-                            target="ideal-proportion-slider",
-                            style=TOOLTIP_STYLE,
-                            delay={"show": 450, "hide": 100},
-                            ),
-                
-                dbc.Row([
-                    dbc.Col([
-                        html.Label('Expected Growth (%)', style=LABEL_STYLE),
-                        dcc.Input(id='expected-growth', type='number', placeholder='Enter Expected Growth (%)', value=6, style={'width': '100%'}),
-                        dbc.Tooltip("Input expected annual growth for the asset (in %).",
-                                    target="expected-growth",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    )
-                    ], width=4, align="center"),
-
-                    dbc.Col([
-                        html.Label('Asset Volatility', style=LABEL_STYLE),
-                        dcc.Dropdown(id='asset-volatility', options=[
-                            {'label': 'Low', 'value': 'low'},
-                            {'label': 'Mid', 'value': 'mid'},
-                            {'label': 'High', 'value': 'high'}
-                        ], disabled=True, value='high'),
-                        dbc.Tooltip("Set how volatile the price of the asset is.",
-                                        target="asset-volatility",
-                                        style=TOOLTIP_STYLE,
-                                        delay={"show": 450, "hide": 100},
-                                        )                        
-                    ], width=4, align="center"),
-
-                    dbc.Col([
-                        dcc.Checklist(id='growth-decay', options=[
-                            {'label': 'Enable Growth Decay', 'value': 'True'}
-                        ], value=[]),
-                        dbc.Tooltip("If turned on, expected growth linearly decays close to the median growth.",
-                                    target="growth-decay",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    ),
-
-                        dcc.Checklist(id='random-growth-check', options=[
-                            {'label': 'Enable Random Growth', 'value': 'True'}
-                        ], value=[]),
-                        dbc.Tooltip("If turned on, volatility cycles are calculated for the asset.",
-                                    target="random-growth-check",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    )                        
-                    ], width=4, align="center")
-                    
-                ]),
-            ], style={'background': '#f5f5f5', 'padding': '2px 15px 15px 15px', 'borderRadius': '5px'}),
-            
-            html.Br(),
-
-            # Advanced Investments Settings
-            html.Div([
-                html.H6('Advanced Investments Settings', style={**H6_STYLE, 'color': '#f26c0c'}),
-                dbc.Row([
-                    dbc.Col([
-                        html.Label('Volatility Cycle Duration (in years)', style=LABEL_STYLE),
-                        dcc.Slider(id='volatility-duration-slider', min=0.5, max=15, step=0.5, value=2, 
-                                marks={i: str(i) for i in range(0, 16, 1)}),
-                        dbc.Tooltip("Volatility Cycles keep the mean asset price intact, it just impacts the spread of the volatility.",
-                                    target="volatility-duration-slider",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    ),
-
-                        html.Label('Volatility Magnitude Multiplier', style=LABEL_STYLE),
-                        dcc.Input(
-                            id='volatility-magnitude',
-                            type='number',
-                            placeholder='Enter Volatility Magnitude',
-                            value=1,
-                            style={'width': '100%'},
-                            min = 0,
-                            max = 5,
-                            ),
-                        dbc.Tooltip("Set how intense the volatility cycles are.",
-                                    target="volatility-magnitude",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    ),
-                        html.Label('Volatility Phase', style=LABEL_STYLE),
-                        dcc.Input(
-                            id='volatility-phase',
-                            type='number',
-                            placeholder='Enter Volatility Phase',
-                            value=0,
-                            style={'width': '100%'},
-                            min = 0,
-                            max = 1,
-                            ),
-                        dbc.Tooltip("Set where the cycle should begin. 0 starts at peak stability. 1 starts at peak volatility.",
-                                    target="volatility-phase",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    )
-
-                    ], width=6, align="center"),
-
-                    dbc.Col([
-                        html.Label('Bull-Bear Cycle Duration (in years)', style=LABEL_STYLE),
-                        dcc.Slider(id='bullbear-duration-slider', min=0.5, max=15, step=0.5, value=5,
-                                marks={i: str(i) for i in range(0, 16, 1)}),
-                        dbc.Tooltip("Bull-Bear Cycles alter the mean price of the asset, up and down.",
-                                    target="bullbear-duration-slider",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    ),
-
-                        html.Label('Bull-Bear Magnitude Multiplier', style=LABEL_STYLE),
-                        dcc.Input(
-                            id='bullbear-magnitude',
-                            type='number',
-                            placeholder='Enter Bull-Bear Magnitude',
-                            value=1,
-                            style={'width': '100%'},
-                            min = 0,
-                            max = 5,
-                            ),
-                        dbc.Tooltip("Set how intense the Bull-Bear cycles are.",
-                                    target="bullbear-magnitude",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    ),
-                        html.Label('Bull-Bear Phase', style=LABEL_STYLE),
-                        dcc.Input(
-                            id='bullbear-phase',
-                            type='number',
-                            placeholder='Enter Bull-Bear Phase',
-                            value=0,
-                            style={'width': '100%'},
-                            min = 0,
-                            max = 1,
-                            ),
-                        dbc.Tooltip("Set where the cycle should begin. 0.25 starts at peak Bear. 0.75 starts at peak Bull.",
-                                    target="bullbear-phase",
-                                    style=TOOLTIP_STYLE,
-                                    delay={"show": 450, "hide": 100},
-                                    )
-                    ], width=6, align="center")
-                ])
-            ], id='advanced-settings-div', style={'background': '#f5f5f5', 'padding': '2px 15px 15px 15px', 'borderRadius': '5px'}),
-            
-            html.Br(),
 
             # Portfolio Settings
             html.Div([
@@ -245,9 +65,7 @@ dash_app.layout = dbc.Container([
 
             # Action Buttons
             html.Div([
-                html.Button('Calculate Portfolio', id='calculate-button', className='btn btn-primary', style={'marginRight': '10px'}),
-                html.Button('Add Investment', id='apply-button', n_clicks=0, className='btn btn-secondary', style={'marginRight': '10px'}),
-                html.Button('Clean Table', id='clean-table-button', n_clicks=0, className='btn btn-danger'),
+                html.Button('Calculate Portfolio', id='calculate-button', className='btn btn-primary', style={'marginRight': '10px'})
             ]),
 
             # Error Message Area
@@ -258,7 +76,6 @@ dash_app.layout = dbc.Container([
             html.Div(id='hide-table-flag', style={'display': 'none'}),
 
             # Display Areas
-            html.Div(id='table-div', style={'overflow': 'auto', 'width': '100%'}),
             dcc.Loading(
                 id="loading-external",
                 type="default",
@@ -273,135 +90,15 @@ dash_app.layout = dbc.Container([
 
 # --------------------- CALLBACKS SECTION --------------
 
-# Storing values from the user, displaying table
-@dash_app.callback(
-    [
-        Output('table-div', 'children'),
-        Output('div-assetsBackup', 'children'),
-        Output('hide-table-flag', 'children'),
-        Output('error-message-div', 'children')
-    ]
-    ,
-    [
-        Input('apply-button', 'n_clicks'),
-        Input('clean-table-button', 'n_clicks'),
-        Input('calculate-button', 'n_clicks')
-    ],
-    [
-        dash.dependencies.State('investment-type', 'value'),
-        dash.dependencies.State('ideal-proportion-slider', 'value'),
-        dash.dependencies.State('risk-strategy', 'value'),
-        dash.dependencies.State('investment-start-amount', 'value'),
-        dash.dependencies.State('investment-monthly-amount', 'value'),
-        dash.dependencies.State('investment-time-slider', 'value'),
-        dash.dependencies.State('expected-growth', 'value'),
-        dash.dependencies.State('random-growth-check', 'value'),
-        dash.dependencies.State('asset-volatility', 'value'),
-        dash.dependencies.State('growth-decay', 'value'),
-        dash.dependencies.State('volatility-duration-slider', 'value'),
-        dash.dependencies.State('volatility-magnitude', 'value'),
-        dash.dependencies.State('volatility-phase', 'value'),
-        dash.dependencies.State('bullbear-duration-slider', 'value'),
-        dash.dependencies.State('bullbear-magnitude', 'value'),        
-        dash.dependencies.State('bullbear-phase', 'value'),
-        dash.dependencies.State('div-assetsBackup', 'children')
-    ]
-)
-def update_investments_table(
-    apply_n,clean_n,calc_n,investment_type,
-    ideal_proportion,risk_strategy,investment_start_amount, investment_monthly_amount,
-    investment_time,expected_growth,random_growth,
-    asset_volatility,growth_decay,volatility_duration, volatility_magnitude, volatility_phase,
-    bullbear_duration, bullbear_magnitude, bullbear_phase, prev_investments):
-
-    global investments
-    global portfolioSettings
-
-    # ------------------------------------------------ ERROR CHECKING ----------------------------------
-    # Detecting which button was pressed
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        button_id = 'No clicks yet'
-    else:
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
-    if button_id == 'clean-table-button':
-        investments = []
-        return no_update, str(investments), 'hide', 'Table Cleaned'
-
-    elif button_id == 'calculate-button':  # Check if calculate button was clicked
-        # Check for investments data, if empty, return appropriate message
-        if not investments:
-            return no_update, no_update, 'show', 'Please add investments before calculating.'
-        else:
-            return no_update, no_update, 'hide', ''  # Hide the table and remove warnings
-
-    # Check for None values
-    inputs = [ideal_proportion, risk_strategy, investment_start_amount, investment_monthly_amount, expected_growth, asset_volatility]
-    if any(val is None for val in inputs):
-        # If we have previous investments stored, revert to them
-        if prev_investments:
-            investments = eval(prev_investments)
-        return no_update, prev_investments, 'show', "Please fill out all fields before adding an investment!"
-
-    
-    # Special Null and duplicated checks for investment_type, since it's a text value.
-    if not investment_type or not investment_type.strip():
-        return no_update, prev_investments, 'show', "Investment ID cannot be empty!"
-    elif investment_type.upper() in [item['Investment ID'] for item in investments]:
-        return no_update, prev_investments, 'show', "Investment ID can't be duplicated"
-
-    # ------------------------------------------------ STORING VALUES ----------------------------------
-
-    # Store investment values pertaining to the whole portfolio
-    portfolioSettings['Investment Time (years)'] = min(investment_time, 40) # Just in case the front-end sends a huge value, cap at 40 years
-    portfolioSettings['Start Investment Amount'] = investment_start_amount 
-    portfolioSettings['Monthly Investment'] = investment_monthly_amount
-
-    investment = {
-        'Investment ID': investment_type.upper(),
-        'Ideal Proportion (%)': ideal_proportion,
-        'Investment Strategy': risk_strategy,        
-        'Expected Growth (%)': expected_growth,
-        'Random Growth': True if 'True' in random_growth else False,
-        'Asset Volatility': asset_volatility,
-        'Growth Decay': True if 'True' in growth_decay else False,
-        'Volatility Duration': volatility_duration, 
-        'Volatility Magnitude': volatility_magnitude,
-        'Volatility Phase': volatility_phase,
-        'BullBear Duration': bullbear_duration,
-        'BullBear Magnitude': bullbear_magnitude,
-        'BullBear Phase': bullbear_phase
-    }
-
-    investments.append(investment)
-
-    # Convert investments list to DataFrame for display
-    df = pd.DataFrame(investments)
-
-    # Returns 4 things:
-    # The table itself
-    # Stores investments in the div-assetsBackup, for rollback reasons
-    # 'show', to show the table again if it's hidden
-    # remove error messages when adding investments (sending empty string)
-    return dash_table.DataTable(
-        id='investment-table',
-        columns=[{'name': i, 'id': i} for i in df.columns],
-        data=df.to_dict('records'),
-        style_table={'width': '100%', 'overflowX': 'auto'}
-    ), str(investments), 'show', ''
-
-# ------------
-
-def calc_portfolio(df, portfolioSettings):
+def calc_portfolio(portfolioSettings):
 
     global investments
 
-    if investments:
+    if 'investments' in session and session['investments']:
+        investments = session['investments']
         df = pd.DataFrame(investments)
     else:
         return no_update
-    
     
     startInvestment = portfolioSettings.get('Start Investment Amount', 0)
     monthlyInvestment = portfolioSettings.get('Monthly Investment', 0)
@@ -456,9 +153,6 @@ def calc_portfolio(df, portfolioSettings):
         ) if start > median_growth else np.full(investmentTime_inWeeks, start)
         for start in df['Expected Growth (%)']
     ])
-
-    # pre-calculate masks
-    decayMask = df['Growth Decay'] == True
 
     # ------------ Pre calculating random values section
     def vectorized_genPseudoRdNum(
@@ -608,9 +302,9 @@ def update_asset_volatility_and_advanced_settings(random_growth_value):
     Output('charts-div', 'children'),
     Input('calculate-button', 'n_clicks'),
     [
-        dash.dependencies.State('investment-start-amount', 'value'),
-        dash.dependencies.State('investment-monthly-amount', 'value'),
-        dash.dependencies.State('investment-time-slider', 'value')
+        State('investment-start-amount', 'value'),
+        State('investment-monthly-amount', 'value'),
+        State('investment-time-slider', 'value')
     ]      
 )
 def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_amount, investment_time):
@@ -621,8 +315,8 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
     portfolioSettings['Start Investment Amount'] = investment_start_amount 
     portfolioSettings['Monthly Investment'] = investment_monthly_amount
 
-    df = pd.DataFrame(investments)
-    timeline_df = calc_portfolio(df, portfolioSettings)
+    # df = pd.DataFrame(investments)
+    timeline_df = calc_portfolio(portfolioSettings)
 
     # Return early if there's no update
     if timeline_df is no_update:
@@ -707,20 +401,6 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
         line_chart_by_type, 
         line_chart_total
     ]
-
-# Callback for hidding the table
-@dash_app.callback(
-    Output('table-div', 'style'),
-    Input('hide-table-flag', 'children')
-)
-def toggle_table_display(flag):
-    if flag == 'hide':
-        return {'display': 'none'}  # Hide the table
-    elif flag == 'show':
-        return {}  # Show the table
-    else:
-        return {}  # Default state (show the table)
-
 
 if __name__ == '__main__':
     #investments = []  # Reset the investments list on server restart or page refresh
