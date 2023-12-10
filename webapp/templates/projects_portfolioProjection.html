@@ -23,18 +23,18 @@
         $('#addInvestmentButton').click(function() {
             var formData = {
                 'investment_id': $('#investmentId').val(),
-                'ideal_proportion': $('#idealProportion').val(),
+                'ideal_proportion': $('#idealProportionSlider').val(),
                 'investment_strategy': $('#investmentStrategy').val(),
                 'expected_growth': $('#expectedGrowth').val(),
                 'random_growth': $('#randomGrowth').is(':checked'),
                 'asset_volatility': $('#assetVolatility').val(),
                 'growth_decay': $('#growthDecay').is(':checked'),
-                'volatility_duration': $('#volatilityDuration').val(),
-                'volatility_magnitude': $('#volatilityMagnitude').val(),
-                'volatility_phase': $('#volatilityPhase').val(),
-                'bullbear_duration': $('#bullbearDuration').val(),
-                'bullbear_magnitude': $('#bullbearMagnitude').val(),
-                'bullbear_phase': $('#bullbearPhase').val()
+                'volatility_duration': $('#volatilityDurationSlider').val(),
+                'volatility_magnitude': $('#volatilityMagnitudeSlider').val(),
+                'volatility_phase': $('#volatilityPhaseSlider').val(),
+                'bullbear_duration': $('#bullbearDurationSlider').val(),
+                'bullbear_magnitude': $('#bullbearMagnitudeSlider').val(),
+                'bullbear_phase': $('#bullbearPhaseSlider').val()
             };
 
             $.ajax({
@@ -55,9 +55,9 @@
                     newRow.append($('<td>').text(formData.ideal_proportion));
                     newRow.append($('<td>').text(formData.investment_strategy));
                     newRow.append($('<td>').text(formData.expected_growth));
-                    newRow.append($('<td>').text(formData.random_growth ? 'Yes' : 'No'));
+                    newRow.append($('<td>').text(formData.random_growth ? 'True' : 'False'));
                     newRow.append($('<td>').text(formData.asset_volatility));
-                    newRow.append($('<td>').text(formData.growth_decay ? 'Yes' : 'No'));
+                    newRow.append($('<td>').text(formData.growth_decay ? 'True' : 'False'));
                     newRow.append($('<td>').text(formData.volatility_duration));
                     newRow.append($('<td>').text(formData.volatility_magnitude));
                     newRow.append($('<td>').text(formData.volatility_phase));
@@ -99,7 +99,6 @@
         var value = $('#' + sliderId).val();
         $('#' + valueId).text(value);
     }
-
 
 </script>
 
@@ -297,7 +296,7 @@
                             
                         </div>
                     </td>
-                    <td>{{ investment.investment_id }}</td>
+                    <td >{{ investment.investment_id }}</td>
                     <td>{{ investment.ideal_proportion }}</td>
                     <td>{{ investment.investment_strategy }}</td>
                     <td>{{ investment.expected_growth }}</td>
