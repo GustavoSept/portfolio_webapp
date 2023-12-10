@@ -26,7 +26,7 @@ from webapp import application
 
 
 # Initialize Dash app with the existing Flask server
-dash_app = dash.Dash(__name__, server=application, external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix='/dash/')
+dash_app = dash.Dash(__name__, server=application, external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix='/dash/portfolioProjection/')
 server = dash_app.server
 
 TOOLTIP_STYLE = {"background-color": "black", "color": "white", "border-radius": "5px"}

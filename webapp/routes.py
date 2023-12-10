@@ -13,6 +13,10 @@ def pg_home():
 def pg_EF_Analysis():
     return render_template('projects_economicFreedomAnalysis.html')
 
+@application.route('/projects/compoundCalculator')
+def pg_compoundCalc():
+    return render_template('projects_compoundInterestCalc.html')
+
 @application.route('/projects/portfolioProjection')
 def pg_portfolioProjection():
 
@@ -48,7 +52,7 @@ def pg_portfolioProjection():
     return render_template('projects_portfolioProjection.html', investments=session['investments'])
 
 # ------------------------------------------------------------------
-# If code grows, put this/these function(s) in a controllers.py file
+# If code grows, put these function(s) in a controllers.py file
 # ------------------------------------------------------------------
 
 
