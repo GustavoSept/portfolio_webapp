@@ -26,17 +26,32 @@
       .navbar-nav { /* Menus at the center */
         margin-right: auto;
         margin-left: auto;
-        padding: 1vw 0; /* sets the height of the nav-bar */
+        padding: 0.75vw 0; /* sets the height of the nav-bar */
+      }
+      
+      .navbar-nav .nav-item .nav-link { /* Text from menus */
+          font-size: 0.8vw; /* Set font size relative to the width of the viewport */
       }
 
+      /* Media query for small screens */
+      @media screen and (max-width: 1920px) {
+          .navbar-nav .nav-item .nav-link {
+              font-size: 17px; /* Minimum font size on small screens */
+          }
+      }
+
+
       .navbar-nav .nav-item {
-        margin-right: 2.5vw; /* Adjust as needed */
+        margin-right: 2.5vw;
       }
 
       /* Custom CSS for widening the modal */
       .wider-modal .modal-dialog {
           max-width: 50%;
       }
+
+
+
 
 
     </style>
@@ -53,8 +68,10 @@
 
         <!-- Logo, fill with real file later -->
         <a class="navbar-brand" href="/">
-          <img src="/path/to/logo.png" alt="Logo" style="height: 30px;">
-        </a>
+          <img src="{{ url_for('static', filename='icons/GustavoSept_logo-01.svg') }}" alt="Logo" style="height: 2vw; min-height: 50px; width: auto;">
+        </a>      
+      
+      
 
         <!-- Toggler for mobile views -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +91,7 @@
 
                   <li><a class="dropdown-item" href="/projects/portfolioProjection">Investment Portfolio Simulator</a></li>
                   
-                  <li><a class="dropdown-item" href="#">Compound Interest Calculator</a></li>
+                  <li><a class="dropdown-item" href='/projects/compoundCalculator'>Compound Interest Calculator</a></li>
                 </ul>
               </li>
             
@@ -89,12 +106,12 @@
 
           <!-- Icons on the right -->
           <div class="d-flex">
-            <a class="nav-icon position-relative text-decoration-none" href="#">
-              <img src="{{ url_for('static', filename='icons/github.svg') }}" alt="Setting Icon">
+            <a class="nav-icon position-relative text-decoration-none" href="https://github.com/GustavoSept">
+              <img src="{{ url_for('static', filename='icons/github.svg') }}" alt="Setting Icon" style = "min-height: 35px;">
             </a>
 
-            <a class="nav-icon position-relative text-decoration-none" href="#">
-              <img src="{{ url_for('static', filename='icons/linkedin.svg') }}" alt="Profile Icon">
+            <a class="nav-icon position-relative text-decoration-none" href="https://www.linkedin.com/in/gustavosept/">
+              <img src="{{ url_for('static', filename='icons/linkedin.svg') }}" alt="Profile Icon" style = "min-height: 35px;">               
             </a>
 
           </div>
