@@ -192,14 +192,14 @@
                                 <div class="col">
                                     <label for="volatilityDurationSlider" class="form-label">
                                         Volatility Duration: 
-                                        <span id="volatilityDurationValue">2</span> years
+                                        <span id="volatilityDurationValue"></span> years
                                     </label>
                                     <input type="range" class="form-range" id="volatilityDurationSlider" min="0" max="15" step="0.5" value="2" oninput="updateSliderValue('volatilityDurationSlider', 'volatilityDurationValue')" data-toggle="tooltip" title="Volatility Cycles keep the mean asset price intact, it just impacts the spread of the volatility.">
                                 </div>
                                 <div class="col">
                                     <label for="bullbearDurationSlider" class="form-label">
                                         BullBear Duration: 
-                                        <span id="bullbearDurationValue">5</span> years
+                                        <span id="bullbearDurationValue"></span> years
                                     </label>
                                     <input type="range" class="form-range" id="bullbearDurationSlider" min="0" max="15" step="0.5" value="5" oninput="updateSliderValue('bullbearDurationSlider', 'bullbearDurationValue')" data-toggle="tooltip" title="Bull-Bear Cycles alter the mean price of the asset, up and down.">
                                 </div>
@@ -209,14 +209,14 @@
                                 <div class="col">
                                     <label for="volatilityMagnitudeSlider" class="form-label">
                                         Volatility Magnitude: 
-                                        <span id="volatilityMagnitudeValue">1</span>
+                                        <span id="volatilityMagnitudeValue"></span>
                                     </label>
                                     <input type="range" class="form-range" id="volatilityMagnitudeSlider" min="0" max="5" step="0.1" value="1" oninput="updateSliderValue('volatilityMagnitudeSlider', 'volatilityMagnitudeValue')" data-toggle="tooltip" title="Set how intense Volatility Cycles are.">
                                 </div>
                                 <div class="col">
                                     <label for="bullbearMagnitudeSlider" class="form-label">
                                         BullBear Magnitude: 
-                                        <span id="bullbearMagnitudeValue">1</span>
+                                        <span id="bullbearMagnitudeValue"></span>
                                     </label>
                                     <input type="range" class="form-range" id="bullbearMagnitudeSlider" min="0" max="5" step="0.1" value="1" oninput="updateSliderValue('bullbearMagnitudeSlider', 'bullbearMagnitudeValue')" data-toggle="tooltip" title="Set how intense Bull-Bear Cycles are.">
                                 </div>
@@ -226,14 +226,14 @@
                                 <div class="col">
                                     <label for="volatilityPhaseSlider" class="form-label">
                                         Volatility Phase: 
-                                        <span id="volatilityPhaseValue">0</span>
+                                        <span id="volatilityPhaseValue"></span>
                                     </label>
                                     <input type="range" class="form-range" id="volatilityPhaseSlider" min="0" max="1" step="0.05" value="0" oninput="updateSliderValue('volatilityPhaseSlider', 'volatilityPhaseValue')" data-toggle="tooltip" title="Set where the cycle should begin. 0 starts at peak stability. 1 starts at peak volatility.">
                                 </div>
                                 <div class="col">
                                     <label for="bullbearPhaseSlider" class="form-label">
                                         BullBear Phase: 
-                                        <span id="bullbearPhaseValue">0</span>
+                                        <span id="bullbearPhaseValue"></span>
                                     </label>
                                     <input type="range" class="form-range" id="bullbearPhaseSlider" min="0" max="1" step="0.05" value="0" oninput="updateSliderValue('bullbearPhaseSlider', 'bullbearPhaseValue')" data-toggle="tooltip" title="Set where the cycle should begin. 0.25 starts at peak Bear. 0.75 starts at peak Bull.">
                                 </div>
