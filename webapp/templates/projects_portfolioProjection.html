@@ -7,6 +7,7 @@
 {% block headContent %}
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
 <script>
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip(); 
@@ -19,6 +20,12 @@
             var investmentId = $(this).data('id');
             deleteRow(investmentId);
         });
+
+        // Dismiss error message on modal open
+        $('#addInvestmentModal').on('show.bs.modal', function () {
+            $('#alertPlaceholder').hide();
+        });
+
 
         $('#addInvestmentButton').click(function() {
             var formData = {
@@ -42,35 +49,48 @@
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(formData),
+                
+
                 success: function(response) {
-                    // Handle success
-                    console.log(response);
+                    // Check the response status
+                    if(response.status === 'success') {
+                        // Handle success
+                        console.log(response);
+                        $('#addInvestmentModal').modal('hide');
+
+                        // Create a new row
+                        var newRow = $('<tr data-id="' + formData.investment_id + '">');
+
+                        newRow.append($('<td>').html('<div class="d-flex justify-content-start"><button type="button" class="btn btn-danger btn-sm me-1 delete-button" data-id="' + formData.investment_id + '"><i class="bi bi-trash-fill"></i></button></div>'));
+                        newRow.append($('<td>').text(formData.investment_id));
+                        newRow.append($('<td>').text(formData.ideal_proportion));
+                        newRow.append($('<td>').text(formData.investment_strategy));
+                        newRow.append($('<td>').text(formData.expected_growth));
+                        newRow.append($('<td>').text(formData.random_growth ? 'True' : 'False'));
+                        newRow.append($('<td>').text(formData.asset_volatility));
+                        newRow.append($('<td>').text(formData.growth_decay ? 'True' : 'False'));
+                        newRow.append($('<td>').text(formData.volatility_duration));
+                        newRow.append($('<td>').text(formData.volatility_magnitude));
+                        newRow.append($('<td>').text(formData.volatility_phase));
+                        newRow.append($('<td>').text(formData.bullbear_duration));
+                        newRow.append($('<td>').text(formData.bullbear_magnitude));
+                        newRow.append($('<td>').text(formData.bullbear_phase));
+
+                        // Append the new row to the table
+                        $('#investment_table').append(newRow);
+                    } else {
+                        // Handle server-side errors (backend checks)
+                        $('#dynamicAlertMessage').html('<strong>Error:</strong> ' + response.message);
+                        $('#alertPlaceholder').show();
+                        console.log('Error: ', response.message);
+                    }
                     $('#addInvestmentModal').modal('hide');
-
-                    // Create a new row
-                    var newRow = $('<tr data-id="' + formData.investment_id + '">');
-
-                    newRow.append($('<td>').html('<div class="d-flex justify-content-start"><button type="button" class="btn btn-danger btn-sm me-1 delete-button" data-id="' + formData.investment_id + '"><i class="bi bi-trash-fill"></i></button></div>'));
-                    newRow.append($('<td>').text(formData.investment_id));
-                    newRow.append($('<td>').text(formData.ideal_proportion));
-                    newRow.append($('<td>').text(formData.investment_strategy));
-                    newRow.append($('<td>').text(formData.expected_growth));
-                    newRow.append($('<td>').text(formData.random_growth ? 'True' : 'False'));
-                    newRow.append($('<td>').text(formData.asset_volatility));
-                    newRow.append($('<td>').text(formData.growth_decay ? 'True' : 'False'));
-                    newRow.append($('<td>').text(formData.volatility_duration));
-                    newRow.append($('<td>').text(formData.volatility_magnitude));
-                    newRow.append($('<td>').text(formData.volatility_phase));
-                    newRow.append($('<td>').text(formData.bullbear_duration));
-                    newRow.append($('<td>').text(formData.bullbear_magnitude));
-                    newRow.append($('<td>').text(formData.bullbear_phase));
-
-                    // Append the new row to the table
-                    $('#investment_table').append(newRow);
                 },
                 error: function(error) {
-                    // Handle errors
-                    console.log(error);
+                    // Handle HTTP errors
+                    $('#dynamicAlertMessage').html('<strong>HTTP Error:</strong> ' + error.statusText);
+                    $('#alertPlaceholder').show();
+                    console.log('HTTP Error: ', error);
                 }
             });
         });
@@ -106,7 +126,6 @@
 {% endblock %}
 
 {% block content %}
-
     <!-- Add New Investment Modal -->
     <div class="modal fade wider-modal" id="addInvestmentModal" tabindex="-1" aria-labelledby="addInvestmentModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -264,7 +283,16 @@
     </div>
 
 
-    <div class="container-xxl"> 
+    <div class="container-xxl">
+        <!-- Alert: Error Messages Handling -->
+        <div id="alertPlaceholder" style="display: none;">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        
+        
+        
         <table class="table table-striped table-hover table-bordered" id="investment_table">
             <thead class="table-dark">
                 <tr>
@@ -321,5 +349,5 @@
     </div>
     <div class="container-xxl"> 
         <iframe src="/dash/" style="width:100%; height:4098px;"></iframe>
-    </div>
+    </div>    
 {% endblock %}
