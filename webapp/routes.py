@@ -1,6 +1,7 @@
 from webapp import application
 from flask import Flask, session, render_template
 from flask import request
+import re
 import logging
 
 @application.route('/')
@@ -58,6 +59,41 @@ def delete_investment():
 def add_investment():
     data = request.get_json()
 
+    # Validation checks
+    
+    # Capitalize and check for duplication
+    investment_id_upper = data['investment_id'].upper()
+    if any(investment['investment_id'] == investment_id_upper for investment in session.get('investments', [])):
+        return {'status': 'error', 'message': 'Duplicate investment_id'}
+    
+    # More restrictions for input
+    if 'investment_id' not in data or not re.match("^[A-Za-z0-9_]+$", data['investment_id']):
+        return {'status': 'error', 'message': 'Invalid investment_id'}
+    data['investment_id'] = data['investment_id'].upper()
+
+    if 'investment_strategy' not in data or data['investment_strategy'] not in ['Risky', 'Medium', 'Conservative']:
+        return {'status': 'error', 'message': 'Invalid investment_strategy'}
+
+    if 'asset_volatility' not in data or data['asset_volatility'] not in ['Low', 'Mid', 'High']:
+        return {'status': 'error', 'message': 'Invalid asset_volatility'}
+
+    boolean_fields = ['growth_decay', 'random_growth']
+    for field in boolean_fields:
+        if field in data:
+            try:
+                data[field] = bool(data[field])
+            except ValueError:
+                return {'status': 'error', 'message': f'Invalid value for {field}'}
+
+    float_fields = ['ideal_proportion', 'expected_growth', 'volatility_duration', 'volatility_magnitude', 'volatility_phase', 'bullbear_duration', 'bullbear_magnitude', 'bullbear_phase']
+    for field in float_fields:
+        if field in data:
+            try:
+                data[field] = float(data[field])
+            except ValueError:
+                return {'status': 'error', 'message': f'Invalid value for {field}'}
+
+    # All checks passed, add to session
     if 'investments' not in session:
         session['investments'] = []
 
