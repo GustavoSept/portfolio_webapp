@@ -18,17 +18,31 @@ def pg_portfolioProjection():
 
     if 'investments' not in session:
         session['investments'] = [
-        {"investment_id": "A", "ideal_proportion": 20, "investment_strategy": "Strategy A", "expected_growth": 5,
-        "random_growth":True, "asset_volatility": 1, "growth_decay":True, "volatility_duration": 3, "volatility_magnitude": 1,
-        "volatility_phase": 0, "bullbear_duration": 4, "bullbear_magnitude": 1, "bullbear_phase":0},
-        
-        {"investment_id": "B", "ideal_proportion": 50, "investment_strategy": "Strategy A", "expected_growth": 5,
-        "random_growth":True, "asset_volatility": 1, "growth_decay":True, "volatility_duration": 3, "volatility_magnitude": 1,
+        {"investment_id": "Debenture A", "ideal_proportion": 25, "investment_strategy": "Medium", "expected_growth": 9,
+        "random_growth":False, "asset_volatility": "Low", "growth_decay":False, "volatility_duration": 3, "volatility_magnitude": 1,
         "volatility_phase": 0, "bullbear_duration": 4, "bullbear_magnitude": 1, "bullbear_phase":0},
 
-        {"investment_id": "C", "ideal_proportion": 30, "investment_strategy": "Strategy A", "expected_growth": 5,
-        "random_growth":False, "asset_volatility": 1, "growth_decay":True, "volatility_duration": 3, "volatility_magnitude": 1,
-        "volatility_phase": 0.5, "bullbear_duration": 4, "bullbear_magnitude": 1, "bullbear_phase":0.5},
+        {"investment_id": "Debenture B", "ideal_proportion": 20, "investment_strategy": "Risky", "expected_growth": 11,
+        "random_growth":False, "asset_volatility": "Low", "growth_decay":False, "volatility_duration": 3, "volatility_magnitude": 1,
+        "volatility_phase": 0, "bullbear_duration": 4, "bullbear_magnitude": 1, "bullbear_phase":0},
+        
+        {"investment_id": "Bitcoin", "ideal_proportion": 5, "investment_strategy": "Conservative", "expected_growth": 30,
+        "random_growth":True, "asset_volatility": "High", "growth_decay":True, "volatility_duration": 2, "volatility_magnitude": 1.2,
+        "volatility_phase": 0.3, "bullbear_duration": 4, "bullbear_magnitude": 1.15, "bullbear_phase":0.80},
+        
+        {"investment_id": "Cardano", "ideal_proportion": 10, "investment_strategy": "Conservative", "expected_growth": 75,
+        "random_growth":True, "asset_volatility": "High", "growth_decay":True, "volatility_duration": 2, "volatility_magnitude": 1.2,
+        "volatility_phase": 0.5, "bullbear_duration": 4, "bullbear_magnitude": 1.35, "bullbear_phase":0.90},
+        
+        {"investment_id": "10-yr Treasury", "ideal_proportion": 25, "investment_strategy": "Risky", "expected_growth": 4.2,
+        "random_growth":False, "asset_volatility": "Low", "growth_decay":False, "volatility_duration": 3, "volatility_magnitude": 1,
+        "volatility_phase": 0, "bullbear_duration": 4, "bullbear_magnitude": 1, "bullbear_phase":0},
+        
+        {"investment_id": "SP500", "ideal_proportion": 15, "investment_strategy": "Medium", "expected_growth": 10,
+        "random_growth":True, "asset_volatility": "Mid", "growth_decay":True, "volatility_duration": 3, "volatility_magnitude": 1,
+        "volatility_phase": 0, "bullbear_duration": 10, "bullbear_magnitude": 1, "bullbear_phase":0.05},
+        
+        
     ]
 
     return render_template('projects_portfolioProjection.html', investments=session['investments'])
@@ -59,7 +73,7 @@ def delete_investment():
 def add_investment():
     data = request.get_json()
 
-    # Validation checks
+    # -------------------------------- Validation checks
     
     # Capitalize and check for duplication
     investment_id_upper = data['investment_id'].upper()
@@ -67,7 +81,7 @@ def add_investment():
         return {'status': 'error', 'message': 'Duplicate investment_id'}
     
     # More restrictions for input
-    if 'investment_id' not in data or not re.match("^[A-Za-z0-9_]+$", data['investment_id']):
+    if 'investment_id' not in data or not re.match("^[A-Za-z0-9_ -]+$", data['investment_id']):
         return {'status': 'error', 'message': 'Invalid investment_id'}
     data['investment_id'] = data['investment_id'].upper()
 
@@ -93,7 +107,7 @@ def add_investment():
             except ValueError:
                 return {'status': 'error', 'message': f'Invalid value for {field}'}
 
-    # All checks passed, add to session
+    # -------------------------------- All checks passed, add to session
     if 'investments' not in session:
         session['investments'] = []
 
