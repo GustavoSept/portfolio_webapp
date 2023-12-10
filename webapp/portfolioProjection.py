@@ -19,7 +19,7 @@ investments = []
 portfolioSettings = {
     'Start Investment Amount': 1000,
     'Monthly Investment': 100,
-    'Investment Time (years)': 2
+    'Investment Time (years)': 4
 }
 
 from webapp import application
@@ -57,7 +57,7 @@ dash_app.layout = dbc.Container([
                 ]),
                 
                 html.Label('Investment Time (years)', style=LABEL_STYLE),
-                dcc.Slider(id='investment-time-slider', min=0, max=MAX_INVESTMENT_TIME, step=1, value=2, 
+                dcc.Slider(id='investment-time-slider', min=0, max=MAX_INVESTMENT_TIME, step=1, value=4,
                            marks={i: str(i) for i in range(0, MAX_INVESTMENT_TIME+1, 1)})
             ], style={'background': '#f5f5f5', 'padding': '2px 15px 15px 15px', 'borderRadius': '5px'}),
 
@@ -104,7 +104,6 @@ def calc_portfolio(portfolioSettings):
     monthlyInvestment = portfolioSettings.get('Monthly Investment', 0)
     investmentTime = portfolioSettings.get('Investment Time (years)', 0)
 
-
     distinctInvestments_amount = df.shape[0]
     # re-scaling idealProportion and expectedGrowth
     df['ideal_proportion'] /= df['ideal_proportion'].sum()
@@ -112,15 +111,15 @@ def calc_portfolio(portfolioSettings):
 
     # Re-labeling risks and volatility
     df['investment_strategy'] = df['investment_strategy'].map({
-                                                                'conservative': 1.0375,
-                                                                'medium': 1.075,
-                                                                'risky': 1.15
+                                                                'Conservative': 1.0375,
+                                                                'Medium': 1.075,
+                                                                'Risky': 1.15
                                                             })
 
     df['asset_volatility'] = df['asset_volatility'].map({
-                                                        'high': 10,
-                                                        'mid': 6,
-                                                        'low': 3
+                                                        'High': 10,
+                                                        'Mid': 6,
+                                                        'Low': 3
                                                     })
     
     # Disabling random number generation where necessary
@@ -140,6 +139,9 @@ def calc_portfolio(portfolioSettings):
     totalSold = np.zeros(distinctInvestments_amount)
     totalBought = np.zeros(distinctInvestments_amount)
     currentAmount = np.array(startInvestment * df['ideal_proportion'])
+
+    # Initializing random_values
+    random_values = None
 
     # (if enabled) Pre-calculate Expected Growth decay
     # Tends to the median growth (if growth > median)
@@ -213,7 +215,9 @@ def calc_portfolio(portfolioSettings):
         # Create an array of random numbers with shape (investmentTime_inWeeks, number_of_rows)
         return np.array([np.random.normal(1 * (1+trendCycle[i]), randomStd * sVolatilityCycle[i]) 
                                 for i in range(len(weeks))])
+    
 
+    
     if df['random_growth'].any(): # skipping pre-calculation if there's no randomGrowth checked
         weeks = np.arange(1, investmentTime_inWeeks + 1)
         random_values = vectorized_genPseudoRdNum(
@@ -230,6 +234,9 @@ def calc_portfolio(portfolioSettings):
 
     results = []
 
+    #print(type(decay_2DList))
+    print(random_values)
+
     for week in range(1, investmentTime_inWeeks + 1):
         # Getting precalculated values for Decay Growth
         weekGrowthValues = decay_2DList[:, week-1]
@@ -238,13 +245,14 @@ def calc_portfolio(portfolioSettings):
         weekGrowth = (1 + weekGrowthValues) ** (1/52) - 1
         
         # skipping calculation if there's no randomGrowth checked
-        if df['random_growth'].any():
+        if random_values is not None:
             weekGrowth *=  random_values[week - 1]
 
 
         # Casting compound growth
         currentAmount += currentAmount * weekGrowth
         
+
         # -------------------- Rebalancing Portfolio Section
         thresholdInvestment = thresholdProportion * currentAmount.sum()
         idealInvestment = df['ideal_proportion'] * currentAmount.sum()
@@ -271,6 +279,7 @@ def calc_portfolio(portfolioSettings):
         actualProportion = currentAmount / (currentAmount.sum() + 1e-10)
 
         # --------------------------- Storing Info in TimeLine
+
         results.extend(list(zip(df['investment_id'], currentAmount, [week]*distinctInvestments_amount, totalSold, totalBought, actualProportion)))
 
 
