@@ -33,7 +33,7 @@ TOOLTIP_STYLE = {"background-color": "black", "color": "white", "border-radius":
 LABEL_STYLE = {'font-weight': 'bold'}
 H6_STYLE = {'textAlign': 'center', 'padding': '5px', 'fontWeight': 'bold', 'fontStyle': 'italic'}
 
-MAX_INVESTMENT_TIME = 20
+MAX_INVESTMENT_TIME = 40
 
 dash_app.layout = dbc.Container([
     dbc.Row(
@@ -147,6 +147,9 @@ def calc_portfolio(portfolioSettings):
     # Tends to the median growth (if growth > median)
     median_growth = df['expected_growth'].median()
 
+    # Compound interest conversion from annual to weekly growth
+    df['expected_growth'] = (1 + df['expected_growth']) ** (1/52) - 1
+
     decay_2DList = np.array([
         np.linspace(
             start,
@@ -233,25 +236,16 @@ def calc_portfolio(portfolioSettings):
         )
 
     results = []
-
-    #print(type(decay_2DList))
-    print(random_values)
-
     for week in range(1, investmentTime_inWeeks + 1):
         # Getting precalculated values for Decay Growth
-        weekGrowthValues = decay_2DList[:, week-1]
-
-        # Compound interest conversion from annual to weekly growth
-        weekGrowth = (1 + weekGrowthValues) ** (1/52) - 1
+        weekGrowth = decay_2DList[:, week-1]        
         
         # skipping calculation if there's no randomGrowth checked
         if random_values is not None:
             weekGrowth *=  random_values[week - 1]
 
-
         # Casting compound growth
         currentAmount += currentAmount * weekGrowth
-        
 
         # -------------------- Rebalancing Portfolio Section
         thresholdInvestment = thresholdProportion * currentAmount.sum()
@@ -273,11 +267,16 @@ def calc_portfolio(portfolioSettings):
         #  First half: transform toBuy_Delta in proportion
         # Second half: multiply each proportion with the amount of money in the balance
         toBuy_Proportion = toBuy_Delta / (toBuy_Delta.sum() + 1e-10)
+
+        if np.sum(toBuy_Proportion) == 0:
+            toBuy_Proportion = np.full(distinctInvestments_amount, 1/distinctInvestments_amount)
+
         boughtValues =  toBuy_Proportion * np.round(soldAmount + (monthlyInvestment*12/52), 2)
 
         totalBought += boughtValues
-        actualProportion = currentAmount / (currentAmount.sum() + 1e-10)
 
+        currentAmount += boughtValues
+        actualProportion = currentAmount / (currentAmount.sum() + 1e-10)
         # --------------------------- Storing Info in TimeLine
 
         results.extend(list(zip(df['investment_id'], currentAmount, [week]*distinctInvestments_amount, totalSold, totalBought, actualProportion)))
@@ -320,7 +319,7 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
     global investments
 
     # Updating the global portfolioSettings before calling calc_portfolio
-    portfolioSettings['Investment Time (years)'] = min(investment_time, 40) # Just in case the front-end sends a huge value, cap at 40 years
+    portfolioSettings['Investment Time (years)'] = min(investment_time, MAX_INVESTMENT_TIME) # Just in case the front-end sends a huge value, cap at 40 years
     portfolioSettings['Start Investment Amount'] = investment_start_amount 
     portfolioSettings['Monthly Investment'] = investment_monthly_amount
 
@@ -335,9 +334,10 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
     # ------------------------------- calculations for plotting -------------------------------
     # Calculate the current worth of the portfolio
     current_worth = timeline_df[timeline_df['Week'] == timeline_df['Week'].max()]['Current Amount ($)'].sum()
+    investment_start_amount = 1 if investment_start_amount == 0 else investment_start_amount
     
     # Calculate the percentage growth compared to 'Start Investment Amount'
-    percentage_growth = ((current_worth - investment_start_amount) / investment_start_amount) * 100
+    percentage_growth = ((current_worth - investment_start_amount) / investment_start_amount + 1e-16) * 100
 
     # Converting Weeks to Years
     timeline_df['Current Year'] = timeline_df['Week'] // 52
