@@ -8,6 +8,11 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
+    $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip(); 
+    });
+</script>
+<script>
     $(document).ready(function() {
         // Delegate the delete button click event for current and future elements
         $('#investment_table tbody').on('click', '.delete-button', function() {
@@ -43,7 +48,8 @@
                     $('#addInvestmentModal').modal('hide');
 
                     // Create a new row
-                    var newRow = $('<tr>');
+                    var newRow = $('<tr data-id="' + formData.investment_id + '">');
+
                     newRow.append($('<td>').html('<div class="d-flex justify-content-start"><button type="button" class="btn btn-danger btn-sm me-1 delete-button" data-id="' + formData.investment_id + '"><i class="bi bi-trash-fill"></i></button></div>'));
                     newRow.append($('<td>').text(formData.investment_id));
                     newRow.append($('<td>').text(formData.ideal_proportion));
@@ -88,6 +94,13 @@
             }
         });        
     }
+
+    function updateSliderValue(sliderId, valueId) {
+        var value = $('#' + sliderId).val();
+        $('#' + valueId).text(value);
+    }
+
+
 </script>
 
 
@@ -96,7 +109,7 @@
 {% block content %}
 
     <!-- Add New Investment Modal -->
-    <div class="modal fade" id="addInvestmentModal" tabindex="-1" aria-labelledby="addInvestmentModalLabel" aria-hidden="true">
+    <div class="modal fade wider-modal" id="addInvestmentModal" tabindex="-1" aria-labelledby="addInvestmentModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -106,81 +119,142 @@
                 <div class="modal-body">
                     <!-- Form for adding new investment -->
                     <form id="addInvestmentForm">
-
+                        <!-- Investment ID and Investment Strategy side by side -->
+                        <div class="row">
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label for="investmentId" class="form-label">Investment ID</label>
+                                    <input type="text" class="form-control" id="investmentId" required data-toggle="tooltip" title="Enter the name or code of the investment">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label for="investmentStrategy" class="form-label">Investment Strategy</label>
+                                    <select class="form-select" id="investmentStrategy" data-toggle="tooltip" title="Set selling-point distance from ideal proportion. The riskier, the less often the asset is sold.">
+                                        <option value="Conservative">Conservative</option>
+                                        <option value="Medium">Medium</option>
+                                        <option selected value="Risky">Risky</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Ideal Proportion Slider -->                        
+                        <label for="idealProportionSlider" class="form-label">
+                            Ideal Proportion:
+                            <span id="idealProportionValue" data-toggle="tooltip" title="Set the desired portfolio percentage for this investment. This slider can also be treated as weighted proportions.">20</span>%
+                        </label>
+                        <input type="range" class="form-range" id="idealProportionSlider" min="0" max="100" step="1" value="20" oninput="updateSliderValue('idealProportionSlider', 'idealProportionValue')">
                         
-                        <div class="mb-3">
-                            <label for="investmentId" class="form-label">Investment ID</label>
-                            <input type="text" class="form-control" id="investmentId" required>
+                    
+                        <!-- Remaining Fields in Columns -->
+                        <div class="row">
+                            <div class="col">
+                                <!-- Expected Growth -->
+                                <div class="mb-3">
+                                    <label for="expectedGrowth" class="form-label">Expected Growth (%)</label>
+                                    <input type="number" class="form-control" id="expectedGrowth" value="5" data-toggle="tooltip" title="Input expected annual growth for the asset (in %).">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <!-- Asset Volatility -->
+                                <div class="mb-3">
+                                    <label for="assetVolatility" class="form-label">Asset Volatility</label>
+                                    <select class="form-select" id="assetVolatility" disabled data-toggle="tooltip" title="Set how volatile the price of the asset is.">
+                                        <option value="Low">Low</option>
+                                        <option selected value="Mid">Mid</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <!-- Random Growth & Growth Decay Checkboxes -->
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="randomGrowth" data-toggle="tooltip" title="If turned on, volatility cycles are calculated for the asset.">
+                                    <label class="form-check-label" for="randomGrowth">Random Growth</label>
+                                </div>
+                                <script>
+                                    // Ensure the checkbox is always unchecked when the page loads
+                                    document.addEventListener("DOMContentLoaded", function () {
+                                        var checkbox = document.getElementById("randomGrowth");
+                                        checkbox.checked = false;
+                                    });
+                                </script>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="growthDecay" checked data-toggle="tooltip" title="If turned on, expected growth linearly decays close to the median growth.">
+                                    <label class="form-check-label" for="growthDecay">Growth Decay</label>
+                                </div>
+                            </div>
                         </div>
+                        <!-- Toggleable Advanced Settings -->                       
+                        <div id="advancedSettings" class="bg-light shadow" style="display: none; padding: 20px; border-radius: 5px;">
+                            <h4 style="color: #e63946;">Advanced Settings</h4>
+                            <div class="row">
+                                <div class="col">
+                                    <label for="volatilityDurationSlider" class="form-label">
+                                        Volatility Duration: 
+                                        <span id="volatilityDurationValue">2</span> years
+                                    </label>
+                                    <input type="range" class="form-range" id="volatilityDurationSlider" min="0" max="15" step="0.5" value="2" oninput="updateSliderValue('volatilityDurationSlider', 'volatilityDurationValue')" data-toggle="tooltip" title="Volatility Cycles keep the mean asset price intact, it just impacts the spread of the volatility.">
+                                </div>
+                                <div class="col">
+                                    <label for="bullbearDurationSlider" class="form-label">
+                                        BullBear Duration: 
+                                        <span id="bullbearDurationValue">5</span> years
+                                    </label>
+                                    <input type="range" class="form-range" id="bullbearDurationSlider" min="0" max="15" step="0.5" value="5" oninput="updateSliderValue('bullbearDurationSlider', 'bullbearDurationValue')" data-toggle="tooltip" title="Bull-Bear Cycles alter the mean price of the asset, up and down.">
+                                </div>
+                            </div>
+                        
+                            <div class="row">
+                                <div class="col">
+                                    <label for="volatilityMagnitudeSlider" class="form-label">
+                                        Volatility Magnitude: 
+                                        <span id="volatilityMagnitudeValue">1</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="volatilityMagnitudeSlider" min="0" max="5" step="0.1" value="1" oninput="updateSliderValue('volatilityMagnitudeSlider', 'volatilityMagnitudeValue')" data-toggle="tooltip" title="Set how intense Volatility Cycles are.">
+                                </div>
+                                <div class="col">
+                                    <label for="bullbearMagnitudeSlider" class="form-label">
+                                        BullBear Magnitude: 
+                                        <span id="bullbearMagnitudeValue">1</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="bullbearMagnitudeSlider" min="0" max="5" step="0.1" value="1" oninput="updateSliderValue('bullbearMagnitudeSlider', 'bullbearMagnitudeValue')" data-toggle="tooltip" title="Set how intense Bull-Bear Cycles are.">
+                                </div>
+                            </div>
+                        
+                            <div class="row">
+                                <div class="col">
+                                    <label for="volatilityPhaseSlider" class="form-label">
+                                        Volatility Phase: 
+                                        <span id="volatilityPhaseValue">0</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="volatilityPhaseSlider" min="0" max="1" step="0.05" value="0" oninput="updateSliderValue('volatilityPhaseSlider', 'volatilityPhaseValue')" data-toggle="tooltip" title="Set where the cycle should begin. 0 starts at peak stability. 1 starts at peak volatility.">
+                                </div>
+                                <div class="col">
+                                    <label for="bullbearPhaseSlider" class="form-label">
+                                        BullBear Phase: 
+                                        <span id="bullbearPhaseValue">0</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="bullbearPhaseSlider" min="0" max="1" step="0.05" value="0" oninput="updateSliderValue('bullbearPhaseSlider', 'bullbearPhaseValue')" data-toggle="tooltip" title="Set where the cycle should begin. 0.25 starts at peak Bear. 0.75 starts at peak Bull.">
+                                </div>
+                            </div>
+                        </div>                        
 
-                        <div class="mb-3">
-                            <label for="idealProportion" class="form-label">Ideal Proportion (%)</label>
-                            <input type="number" class="form-control" id="idealProportion" value="20">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="investmentStrategy" class="form-label">Investment Strategy</label>
-                            <select class="form-select" id="investmentStrategy">
-                                <option value="Conservative">Conservative</option>
-                                <option value="Medium">Medium</option>
-                                <option selected value="Risky">Risky</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="expectedGrowth" class="form-label">Expected Growth (%)</label>
-                            <input type="number" class="form-control" id="expectedGrowth" value="5">
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="randomGrowth" checked>
-                            <label class="form-check-label" for="randomGrowth">Random Growth</label>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="assetVolatility" class="form-label">Asset Volatility</label>
-                            <select class="form-select" id="assetVolatility">
-                                <option value="Low">Low</option>
-                                <option selected value="Mid">Mid</option>
-                                <option value="High">High</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="growthDecay" checked>
-                            <label class="form-check-label" for="growthDecay">Growth Decay</label>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="volatilityDuration" class="form-label">Volatility Duration</label>
-                            <input type="number" class="form-control" id="volatilityDuration" value="2">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="volatilityMagnitude" class="form-label">Volatility Magnitude</label>
-                            <input type="number" class="form-control" id="volatilityMagnitude" value="1">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="volatilityPhase" class="form-label">Volatility Phase</label>
-                            <input type="number" class="form-control" id="volatilityPhase" value="0">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="bullbearDuration" class="form-label">BullBear Duration</label>
-                            <input type="number" class="form-control" id="bullbearDuration" value="5">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="bullbearMagnitude" class="form-label">BullBear Magnitude</label>
-                            <input type="number" class="form-control" id="bullbearMagnitude" value="1">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="bullbearPhase" class="form-label">BullBear Phase</label>
-                            <input type="number" class="form-control" id="bullbearPhase" value="0">
-                        </div>
+                        <!-- Script to Toggle Advanced Settings -->
+                        <script>
+                            $('#randomGrowth').change(function() {
+                                if($(this).is(':checked')) {
+                                    $('#advancedSettings').show();
+                                    $('#assetVolatility').prop('disabled', false);
+                                } else {
+                                    $('#advancedSettings').hide();
+                                    $('#assetVolatility').prop('disabled', true);
+                                }
+                            });
+                        </script>
                     </form>
+                    
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
