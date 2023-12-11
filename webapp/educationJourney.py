@@ -61,11 +61,7 @@ def create_sunburst(df):
         # Customizing the tooltip
         hovertemplate=\
             "<b>%{customdata[0]}</b><br>%{label}<br>Time: %{value}h<br>Institution: %{customdata[2]}<extra></extra>",  
-    )
-    fig.update_layout(
-        width= 1200,
-        height=1200
-    )
+    )    
 
     return fig
 
@@ -105,7 +101,7 @@ app.layout = html.Div([
     dcc.Store(id='dropdown-state', data={'expanded': False}),  # Keep track of the dropdown state
     toggle_button,  # Dropdown acting as a label
     checklist_div,   # Div containing the checklist
-    dcc.Graph(id='sunburst-chart'),
+    dcc.Graph(id='sunburst-chart', style={'width': '100%', 'height': '80vh'}),
     dcc.Store(id='store-url'),  # Store component to hold the URL
     html.Div(id='hidden-div', style={'display': 'none'}, children='init'),  # Hidden div
     html.Div(id='dummy-div', style={'display': 'none', 'display': 'flex'})  # Dummy div for clientside callback
