@@ -1,6 +1,5 @@
 from webapp import application
-from flask import Flask, session, render_template
-from flask import request
+from flask import Flask, session, render_template, request, redirect
 import re
 import logging
 
@@ -20,6 +19,7 @@ def pg_compoundCalc():
 @application.route('/projects/portfolioProjection')
 def pg_portfolioProjection():
 
+    # If user doesn't have this cookie, create a default table for him
     if 'investments' not in session:
         session['investments'] = [
         {"investment_id": "Debenture A", "ideal_proportion": 25, "investment_strategy": "Medium", "expected_growth": 9,
