@@ -40,7 +40,6 @@
           }
       }
 
-
       .navbar-nav .nav-item {
         margin-right: 2.5vw;
       }
@@ -50,7 +49,22 @@
           max-width: 50%;
       }
 
+      /* To properly align the first strip at the home page */
+      @media screen and (min-width: 1080px) {
+          .central-container {
+              max-width: 600px;
+              margin: 0 auto;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+          }
 
+          .central-container p {
+              width: 100%; /* Adjust as needed */
+              text-align: center;
+              /* Remove min-width if it's causing issues */
+          }
+      }
 
 
 
