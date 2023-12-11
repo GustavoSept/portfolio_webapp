@@ -66,7 +66,7 @@ app.layout = html.Div(style={
             
             html.Div([
                 html.Label("Expected Inflation (in %) "),
-                dcc.Input(id='expectedInflation-input', value=3.5, type='number')
+                dcc.Input(id='expectedInflation-input', value=6, type='number')
             ], style={'marginBottom': '20px'}),
         ], width=6, align="center")
     ], style={
@@ -116,7 +116,7 @@ def compound_interest_over_time(initialContribution,
         final_balance = [current_balance[0] + current_interest[0] - current_inflation[0] + current_contribution[0]]
 
         investmentTime *= 12 # converting years to months    
-        for month in range(1, investmentTime):
+        for _ in range(1, investmentTime):
             # ------ Row by row calculation
             local_balance = final_balance[-1]
             local_interest = local_balance * monthly_rate
@@ -131,8 +131,10 @@ def compound_interest_over_time(initialContribution,
             current_contribution.append(local_contribution)
             final_balance.append(local_result)
 
-            # Increase the monthly contribution for the next month
-            monthlyContributions *= (1 + monthly_contrib_growth)
+            # Alter the monthly contribution for the next month
+            # Increase by productivity gain
+            # Decrease by inflation
+            monthlyContributions *= (1 + monthly_contrib_growth - monthly_inflation)
         
         df = pd.DataFrame({            
             'Initial Balance': current_balance,
