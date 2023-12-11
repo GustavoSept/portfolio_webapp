@@ -22,12 +22,9 @@ portfolioSettings = {
     'Investment Time (years)': 4
 }
 
-from webapp import application
-
 
 # Initialize Dash app with the existing Flask server
 dash_app = dash.Dash(__name__, server=application, external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix='/dash/portfolioProjection/')
-server = dash_app.server
 
 TOOLTIP_STYLE = {"background-color": "black", "color": "white", "border-radius": "5px"}
 LABEL_STYLE = {'font-weight': 'bold'}
@@ -412,5 +409,4 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
     ]
 
 if __name__ == '__main__':
-    #investments = []  # Reset the investments list on server restart or page refresh
     application.run(debug=True)
