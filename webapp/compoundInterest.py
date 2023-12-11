@@ -1,3 +1,5 @@
+from webapp import application
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
@@ -6,12 +8,8 @@ import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], server=application, routes_pathname_prefix='/dash/compoundCalc/')
 
-# External stylesheets to make it prettier
-external_stylesheets = [dbc.themes.BOOTSTRAP]
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, routes_pathname_prefix='/dash/compoundCalc/')
 
 app.layout = html.Div(style={
     'fontFamily': 'Arial, sans-serif',
@@ -230,4 +228,4 @@ def update_values(investmentTime, yieldRate, initialContribution, monthlyContrib
     return {'data': traces, 'layout': layout}, final_balance_content, final_balance_style, comparison_content, comparison_style
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    application.run_server(debug=True)
