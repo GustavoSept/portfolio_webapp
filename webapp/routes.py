@@ -8,6 +8,10 @@ import logging
 def pg_home():    
     return render_template('home.html')
 
+@application.route('/contact')
+def pg_contact():
+    return render_template('contact.html')
+
 @application.route('/projects/economic_freedom_analysis')
 def pg_EF_Analysis():
     return render_template('projects_economicFreedomAnalysis.html')
