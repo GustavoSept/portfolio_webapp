@@ -99,6 +99,9 @@ app.layout = html.Div([
         html.Span(f"{HOURS_STUDIED} hours", style={'color': '#0077b6', 'font-size': 'larger'}),
         " in total."]),
     dcc.Store(id='dropdown-state', data={'expanded': False}),  # Keep track of the dropdown state
+    html.Div(
+        html.Label('Click chart to filter groups, or access source material.'),
+    ),
     toggle_button,  # Dropdown acting as a label
     checklist_div,   # Div containing the checklist
     dcc.Graph(id='sunburst-chart', style={'width': '100%', 'height': '80vh'}),
