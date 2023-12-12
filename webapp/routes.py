@@ -1,12 +1,31 @@
 from webapp import application
-from flask import Flask, session, render_template, request, redirect
+from flask import Flask, session, render_template, request, redirect, url_for
 import re
 import logging
 
 @application.route('/')
 @application.route('/home')
-def pg_home():    
-    return render_template('home.html')
+def pg_home():
+    # List of projects
+    projects = [
+        {
+            'url': '/projects/economic_freedom_analysis',
+            'image': url_for('static', filename='imgs/img_EFanalysis.webp'),
+            'name': 'Economic Freedom Analysis'
+        },
+        {
+            'url': '/projects/portfolioProjection',
+            'image': url_for('static', filename='imgs/img_dashSimulator.webp'),
+            'name': 'Investment Assets Projection'
+        },
+        {
+            'url': '/projects/compoundCalculator',
+            'image': url_for('static', filename='imgs/img_dashCompound.webp'),
+            'name': 'Compound Interest Calculator'
+        }
+    ]
+
+    return render_template('home.html', projects=projects)
 
 @application.route('/contact')
 def pg_contact():
