@@ -31,6 +31,10 @@ def pg_home():
 def pg_contact():
     return render_template('contact.html')
 
+@application.route('/spreadsheets')
+def pg_spreadsheets():
+    return render_template('spreadsheets.html')
+
 @application.route('/projects/economic_freedom_analysis')
 def pg_EF_Analysis():
     return render_template('projects_economicFreedomAnalysis.html')
