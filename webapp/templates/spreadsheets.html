@@ -1,54 +1,42 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Home
+    Spreadsheets
 {% endblock %}
 
 {% block content %}
-    <!-- Second full-width strip -->
     <div style="background-color: #99c1b9; width: 100%; padding: 20px 0; text-align: center; margin: 0 auto; box-shadow: 0px 15px 15px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #003566;">Main Projects</h2>
-        <div style="display: flex; justify-content: space-between; max-width: 1200px; margin: 0 auto;">            
-            <!-- First Container -->
-            <a href="/projects/economic_freedom_analysis">
-                <div style="width: 10vw; min-width: 150px; background-color: #fff; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); padding: 20px; text-align: center;">
-                    <img src="{{ url_for('static', filename='imgs/img_EFanalysis.webp') }}" alt="Project 1" style="max-width: 100%;">
-                    <div style="background-color: #fff; padding: 10px; border-radius: 0 0 10px 10px;">
-                        <h4>Economic Freedom Analysis</h4>
-                    </div>
+        <h2 style="color: #003566; font-size: 1.5em;">Useful Spreadsheets</h2><br>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin: 0 auto;">
+            <!-- Project Containers -->
+            {% for project in projects %}
+                
+                <div style="width: 100%; max-width: 500px; background-color: #fff; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); padding: 20px; text-align: center; transition: transform 0.3s;">
+                    <a href="{{ project.url }}" class="project-container">
+                        <img src="{{ project.image }}" alt="{{ project.name }}" style="max-width: 100%; height: auto; border-radius: 10px;">
+                        <div style="background-color: #fff; padding: 10px; border-radius: 0 0 10px 10px;">
+                            <h4 style="font-size: 1.2em;">{{ project.name }}</h4> </a>                        
+                            <p style="font-size: 1em;">{{ project.text }}</p>
+                        </div>
                 </div>
-            </a>
-
-            <!-- Second Container -->
-            <a href="/projects/portfolioProjection">
-                <div style="width: 10vw; min-width: 150px; background-color: #fff; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); padding: 20px; text-align: center;">
-                    <img src="{{ url_for('static', filename='imgs/img_dashSimulator.webp') }}" alt="Project 2" style="max-width: 100%;">
-                    <div style="background-color: #fff; padding: 10px; border-radius: 0 0 10px 10px;">
-                        <h4>Investment Assets Projection</h4>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Third Container -->
-            <a href="/projects/compoundCalculator">
-                <div style="width: 10vw; min-width: 150px; background-color: #fff; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); padding: 20px; text-align: center;">
-                    <img src="{{ url_for('static', filename='imgs/img_dashCompound.webp') }}" alt="Project 3" style="max-width: 100%;">
-                    <div style="background-color: #fff; padding: 10px; border-radius: 0 0 10px 10px;">
-                        <h4>Compound Interest Calculator</h4>
-                    </div>
-                </div>
-            </a>
+                
+            {% endfor %}
         </div> <br>
     </div>
 
- 
-
-    <!-- Third full-width strip -->
-    <div id="educational-journey" style="width: 100%; padding: 40px 0;">
-        <div class="container-xxl">
-            <iframe src='/dash/educationJourney/' style="width:100%; height:100vw; max-width:100%; max-height:100vh;"></iframe>
-
-        </div>
-    </div>
+    <!-- Responsive Styling -->
+    <style>
+        @media only screen and (min-width: 768px) {
+            .project-container h2 {
+                font-size: 2em;
+            }
+            .project-container h4 {
+                font-size: 1.4em;
+            }
+            .project-container p {
+                font-size: 1.1em;
+            }
+        }
+    </style>
 
 {% endblock %}

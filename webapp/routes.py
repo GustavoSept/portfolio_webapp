@@ -33,7 +33,23 @@ def pg_contact():
 
 @application.route('/spreadsheets')
 def pg_spreadsheets():
-    return render_template('spreadsheets.html')
+    # List of spreadsheets
+    spreadsheets = [
+        {
+            'url': 'https://docs.google.com/spreadsheets/d/1R5Y-YtyYPQ8UfNlO88i3_BSQSj7OkC3Ea1Zp0OYaTbI',
+            'image': url_for('static', filename='imgs/img_spreadsheet_household.webp'),
+            'name': 'Household Spending Spreadsheet',
+            'text': 'Share bills as a couple, compare spending vs revenue evolution, diagnose money sinks.'
+        },
+        {
+            'url': 'https://docs.google.com/spreadsheets/d/168S69ckOY9rqN7M3nANy0LgzVHldvlRLFbf6mjyjb4c',
+            'image': url_for('static', filename='imgs/img_spreadsheet_ondeInvestir.webp'),
+            'name': 'Investment Master Planner',
+            'text': 'Make an investment strategy to take emotions out of the decision making process.'
+        }
+    ]
+
+    return render_template('spreadsheets.html', projects=spreadsheets)
 
 @application.route('/projects/economic_freedom_analysis')
 def pg_EF_Analysis():
