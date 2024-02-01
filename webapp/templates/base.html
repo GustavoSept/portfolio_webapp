@@ -9,76 +9,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <title>{% block title %}{% endblock %}</title>    
-
-    <style>
-      .nav-icon img { /* Icons on the right */
-        width: auto; /* Maintain aspect ratio */
-        height: 1vw; 
-      }
-
-      .nav-icon { /* Icons on the right */
-        padding: 0 0.66vw;
-      }
-    
-      
-      .navbar-nav { /* Menus at the center */
-        margin-right: auto;
-        margin-left: auto;
-        padding: 0.75vw 0; /* sets the height of the nav-bar */
-      }
-      
-      .navbar-nav .nav-item .nav-link { /* Text from menus */
-          font-size: 0.8vw;
-      }
-
-      /* Media query for small screens */
-      @media screen and (max-width: 1920px) {
-          .navbar-nav .nav-item .nav-link {
-              font-size: 17px; /* Minimum font size on small screens */
-          }
-      }
-
-      .navbar-nav .nav-item {
-        margin-right: 2.5vw;
-      }
-
-      /* Custom CSS for widening the modal */
-      .wider-modal .modal-dialog {
-          max-width: 50%;
-      }
-
-      /* To properly align the first strip at the home page */
-      @media screen and (min-width: 1080px) {
-          .central-container {
-              max-width: 600px;
-              margin: 0 auto;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-          }
-
-          .central-container p {
-              width: 100%;
-              text-align: center;
-          }
-      }
-
-      .contact-info a {
-          color: #007bff;
-          text-decoration: none;
-      }
-
-      .contact-info a:hover {
-          text-decoration: underline;
-      }
-
-      .contact-info i {
-          color: #6c757d;
-      }
-
-    </style>
+    <title>{% block title %}{% endblock %}</title>
     
     {% block headContent %} 
 
