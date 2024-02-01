@@ -88,27 +88,56 @@ toggle_button = dbc.Button(
 
 checklist_div = html.Div(
     id='checklist-div',
-    children=[checklist],
-    style={'display': 'none'}  # Initially hidden
+    children=[
+        html.Div([checklist], style={'text-align': 'left', 'margin-left': '35%'})
+    ],
+    style={'display': 'none'}  # Keeping the initially hidden property
 )
 
+
 app.layout = html.Div([
-    html.H1("My Personal Learning Journey"),
-    html.H3([
-        "Studied for ",
-        html.Span(f"{HOURS_STUDIED} hours", style={'color': '#0077b6', 'font-size': 'larger'}),
-        " in total."]),
-    dcc.Store(id='dropdown-state', data={'expanded': False}),  # Keep track of the dropdown state
-    html.Div(
-        html.Label('Click chart to filter groups, or access source material.'),
-    ),
-    toggle_button,  # Dropdown acting as a label
-    checklist_div,   # Div containing the checklist
-    dcc.Graph(id='sunburst-chart', style={'width': '100%', 'height': '80vh'}),
-    dcc.Store(id='store-url'),  # Store component to hold the URL
-    html.Div(id='hidden-div', style={'display': 'none'}, children='init'),  # Hidden div
-    html.Div(id='dummy-div', style={'display': 'none', 'display': 'flex'})  # Dummy div for clientside callback
-    ])
+    dbc.Row([
+        html.H1("My Personal Learning Journey"),
+        dbc.Col([  # Column 1 with responsive width
+            html.H3([
+                "Studied for ",
+                html.Span(f"{HOURS_STUDIED} hours", style={'color': '#0077b6', 'font-weight': 'bold', 'font-size': 'larger'}),
+                " in total."
+            ]),
+            html.P([
+                "Check my ",
+                html.A("Notion Wiki", href="https://gustavosept.notion.site/gustavosept/Studies-d197367eb0284ebeb86ed1ae194d45d6", style={'font-weight': 'bold'}, target="_blank"),
+                " for in-depth material."
+            ], style={'margin-top': '10px'})
+        ], lg=6, md=12),  # Larger screens get a half width, smaller screens full width
+        dbc.Col([  # Column 2 with responsive width
+            html.Div([
+                toggle_button,
+                checklist_div,
+                html.Div([
+                    html.Label('Click chart to filter groups'),
+                    html.Br(),
+                    html.Label('and access source material.'),
+                ], style={
+                    'font-style': 'italic',
+                    'color': 'grey',
+                    'font-size': 'smaller'
+                })
+            ], style={'text-align': 'right'})
+        ], lg=6, md=12)  # Same as above
+    ]),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id='sunburst-chart', style={'width': '100%', 'height': '80vh'})
+        ])
+    ]),
+    dcc.Store(id='store-url'),
+    html.Div(id='hidden-div', style={'display': 'none'}, children='init'),
+    html.Div(id='dummy-div', style={'display': 'none'})
+], style={'max-width': '100vw', 'overflow-x': 'hidden'})
+
+
+
 
 # Function and callback to plot the chart (and filter it)
 @app.callback(
