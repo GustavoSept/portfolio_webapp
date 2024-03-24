@@ -1,41 +1,16 @@
 from webapp import application
 
 from dash import dcc, html, Dash, Output, Input, State, no_update
+from webapp.data_fetcher import data_store
 
+import logging
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 
-# Load data from the Google Sheets URL
-url = 'https://docs.google.com/spreadsheets/d/17_Eq4kJ6LE4hVF-kaa6P6YOy07bukCtQuMHYcNYLjWc/export?format=csv'
-df = pd.read_csv(url)
-
-# deleting rows with NaN values
-df = df[df['Specific Content'].notna()]
-
-HOURS_STUDIED = int(df['Time (in hours)'].sum())
-UNIQUE_INSTITUTIONS = df['Institution'].unique()
-
-# Preprocessing the 'Label' column, to mantain divisions
-def preprocess_labels(df, column_name):
-    label_counts = df[column_name].value_counts()
-    
-    # For labels that occur more than once, add a prefix
-    for label, count in label_counts.items():
-        if count > 1:
-            # Filter rows with the current label
-            label_rows = df[df[column_name] == label]
-            
-            # Generate new labels with prefixes
-            new_labels = [f"{i+1}_{label}" for i in range(count)]
-            
-            df.loc[label_rows.index, column_name] = new_labels
-
-    return df
-
-df = preprocess_labels(df, 'Label')
 
 def create_sunburst(df):
+    #df = data_store['DATA_CACHE'] # It seems we never need to call this one
 
     color_map = {
         '(?)': 'darkblue',
@@ -69,12 +44,12 @@ def create_sunburst(df):
 app = Dash(__name__, server=application, url_base_pathname='/dash/educationJourney/', external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # checklist to filter data between institutions
+# it's dynamically updated using update_checklist_options(n) function and callback
 checklist = dcc.Checklist(
     id='institution-checklist',
-    options=[{'label': i, 'value': i} for i in UNIQUE_INSTITUTIONS],
-    value=list(UNIQUE_INSTITUTIONS),  # Initially, all options are selected
     inline=False
 )
+
 
 toggle_button = dbc.Button(
     "Filter by Institutions",
@@ -101,9 +76,14 @@ app.layout = html.Div([
         dbc.Col([  # Column 1 with responsive width
             html.H3([
                 "Studied for ",
-                html.Span(f"{HOURS_STUDIED} hours", style={'color': '#0077b6', 'font-weight': 'bold', 'font-size': 'larger'}),
+                html.Span(f"{data_store['HOURS_STUDIED']} hours", id="hours-studied", style={'color': '#0077b6', 'font-weight': 'bold', 'font-size': 'larger'}),
                 " in total."
             ]),
+            dcc.Interval(
+                id='interval-component',
+                interval=6*60*60*1000,  # in milliseconds
+                n_intervals=0
+            ),
             html.P([
                 "Check my ",
                 html.A("Notion Wiki", href="https://gustavosept.notion.site/gustavosept/Studies-d197367eb0284ebeb86ed1ae194d45d6", style={'font-weight': 'bold'}, target="_blank"),
@@ -145,9 +125,10 @@ app.layout = html.Div([
     [Input('institution-checklist', 'value')]  # Input from the checklist
 )
 def update_chart(selected_institutions):
+    df = data_store['DATA_CACHE']
+    logging.info("update_chart(selected_institutions) was just called...")
     # Filter the DataFrame based on selected institutions
     filtered_df = df[df['Institution'].isin(selected_institutions)]
-    
     # Create and return the updated sunburst chart
     return create_sunburst(filtered_df)
 
@@ -192,6 +173,25 @@ def toggle_checklist_visibility(n_clicks, style):
     else:
         return {'display': 'block'}
 
+# Function and callback to update the filter categories. It's using the same interval from update_hours_studied() function
+@app.callback(
+    Output('institution-checklist', 'options'),
+    Output('institution-checklist', 'value'),
+    [Input('interval-component', 'n_intervals')]
+)
+def update_checklist_options(n):
+    options = [{'label': i, 'value': i} for i in data_store['UNIQUE_INSTITUTIONS']]
+    value = list(data_store['UNIQUE_INSTITUTIONS'])
+    return options, value
+
+# Function and callback to update HOURS_STUDIED from inside Dash's dbc component
+@app.callback(
+    Output('hours-studied', 'children'),
+    [Input('interval-component', 'n_intervals')]
+)
+def update_hours_studied(n):
+    return f"{data_store['HOURS_STUDIED']} hours"
+
 
 @app.callback(
     Output('dropdown-state', 'data'),
@@ -205,5 +205,5 @@ def toggle_dropdown_state(n_clicks, data):
 
 
 if __name__ == '__main__':
-    application.run_server(debug=True)
+    application.run(debug=False)
 
