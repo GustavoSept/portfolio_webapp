@@ -6,4 +6,4 @@ if __name__ == '__main__':
     start_data_fetcher()
 
     # Start the web application
-    application.run(debug=False, host='0.0.0.0', port=5000)
+    application.run(debug=True, host='0.0.0.0', port=5000)

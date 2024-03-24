@@ -409,4 +409,4 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
     ]
 
 if __name__ == '__main__':
-    application.run(debug=False)
+    application.run(debug=True)

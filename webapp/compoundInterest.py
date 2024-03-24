@@ -230,4 +230,4 @@ def update_values(investmentTime, yieldRate, initialContribution, monthlyContrib
     return {'data': traces, 'layout': layout}, final_balance_content, final_balance_style, comparison_content, comparison_style
 
 if __name__ == '__main__':
-    application.run_server(debug=False)
+    application.run_server(debug=True)
