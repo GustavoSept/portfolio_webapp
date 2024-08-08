@@ -1,13 +1,16 @@
-from webapp import application
-
-from dash import dcc, html, Dash, Output, Input, State, no_update
+from flask import Blueprint
+from dash import dcc, html, Output, Input, State, no_update
 
 import logging
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 
+from webapp.helpers.app import create_dash_app
+
 logging.info("start of educationJourney.py was called")
+
+
 
 # Load data from the Google Sheets URL
 url = 'https://docs.google.com/spreadsheets/d/17_Eq4kJ6LE4hVF-kaa6P6YOy07bukCtQuMHYcNYLjWc/export?format=csv'
@@ -95,7 +98,14 @@ def create_sunburst(df):
     return fig
 
 # Create your Dash app
-app = Dash(__name__, server=application, url_base_pathname='/dash/educationJourney/', external_stylesheets=[dbc.themes.BOOTSTRAP])
+edu_jou_bp = Blueprint('education_journey', __name__)
+
+dash_app = create_dash_app(
+    server=edu_jou_bp,
+    routes_pathname_prefix='/dash/educationJourney/',
+    title="Educational Journey",
+    name='educational_journey_dash'
+)
 
 # checklist to filter data between institutions
 checklist = dcc.Checklist(
@@ -124,7 +134,7 @@ checklist_div = html.Div(
 )
 
 
-app.layout = html.Div([
+dash_app.layout = html.Div([
     dbc.Row([
         html.H1("My Personal Learning Journey"),
         dbc.Col([  # Column 1 with responsive width
@@ -169,7 +179,7 @@ app.layout = html.Div([
 
 
 # Function and callback to plot the chart (and filter it)
-@app.callback(
+@dash_app.callback(
     Output('sunburst-chart', 'figure'),
     [Input('institution-checklist', 'value')]  # Input from the checklist
 )
@@ -183,7 +193,7 @@ def update_chart(selected_institutions):
 
 
 # Function and callback to make the sunburst plot clickable for links
-@app.callback(
+@dash_app.callback(
     Output('store-url', 'data'),  # Update the store instead of the URL directly
     [Input('sunburst-chart', 'clickData')]
 )
@@ -198,7 +208,7 @@ def store_url(clickData):
     return no_update
 
 # Clientside callback to open a new window
-app.clientside_callback(
+dash_app.clientside_callback(
     """
     function(data) {
         if(data && data.url) {
@@ -211,7 +221,7 @@ app.clientside_callback(
 )
 
 # Function and callback to make the dropdown work
-@app.callback(
+@dash_app.callback(
     Output('checklist-div', 'style'),
     [Input('toggle-button', 'n_clicks')],
     [State('checklist-div', 'style')]
@@ -223,7 +233,7 @@ def toggle_checklist_visibility(n_clicks, style):
         return {'display': 'block'}
 
 
-@app.callback(
+@dash_app.callback(
     Output('dropdown-state', 'data'),
     [Input('dropdown-label', 'n_clicks')],
     [State('dropdown-state', 'data')]
@@ -232,8 +242,3 @@ def toggle_dropdown_state(n_clicks, data):
     if n_clicks:
         data['expanded'] = not data['expanded']
     return data
-
-
-if __name__ == '__main__':
-    application.run(debug=False)
-

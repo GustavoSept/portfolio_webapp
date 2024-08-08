@@ -6,10 +6,12 @@ import logging
 @application.route('/')
 @application.route('/home')
 def pg_home():
+    print(f'{url_for('pg_EF_Analysis') = }')
     # List of projects
     projects = [
         {
             'url': '/projects/economic_freedom_analysis',
+            'url': url_for('pg_EF_Analysis'),
             'image': url_for('static', filename='imgs/img_EFanalysis.webp'),
             'name': 'Economic Freedom Analysis'
         },
@@ -88,8 +90,6 @@ def pg_portfolioProjection():
         {"investment_id": "SP500", "ideal_proportion": 15, "investment_strategy": "Medium", "expected_growth": 10,
         "random_growth":True, "asset_volatility": "Mid", "growth_decay":True, "volatility_duration": 3, "volatility_magnitude": 1,
         "volatility_phase": 0, "bullbear_duration": 10, "bullbear_magnitude": 1, "bullbear_phase":0.05},
-        
-        
     ]
 
     return render_template('projects_portfolioProjection.html', investments=session['investments'])

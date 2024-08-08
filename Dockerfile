@@ -36,5 +36,5 @@ RUN chown -R appuser:appuser /app
 # Switch to the non-root user
 USER appuser
 
-# Command to start an interactive shell
-CMD ["python3", "webpapp/main.py"]
+# Command to start the application
+CMD ["python3", "webapp/main.py"]

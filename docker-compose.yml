@@ -1,12 +1,11 @@
 services:
-
   webapp:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: webapp
     volumes:
-      - webapp_vol:/app
+      - webapp_vol:/app/data
     ports:
       - "8000:8000"
     deploy:
@@ -14,6 +13,12 @@ services:
         limits:
           cpus: '1.0'
           memory: 0.5G
+    networks:
+      - webapp_network
 
 volumes:
   webapp_vol:
+
+networks:
+  webapp_network:
+    driver: bridge

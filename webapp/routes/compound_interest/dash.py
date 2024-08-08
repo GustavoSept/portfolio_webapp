@@ -1,6 +1,5 @@
-from webapp import application
+from flask import Blueprint
 
-import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from dash.dependencies import Input, Output
@@ -8,10 +7,18 @@ import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], server=application, routes_pathname_prefix='/dash/compoundCalc/')
+from webapp.helpers.app import create_dash_app
 
+comp_int_bp = Blueprint('compound_interest', __name__)
 
-app.layout = html.Div(style={
+dash_app = create_dash_app(
+    server=comp_int_bp,
+    routes_pathname_prefix='/dash/compoundCalc/',
+    title="Compound Calculator",
+    name='compound_calculator_dash',
+)
+
+dash_app.layout = html.Div(style={
     'fontFamily': 'Arial, sans-serif',
     'margin': '50px',
     'padding': '10px',
@@ -160,7 +167,7 @@ def generate_scatter_trace(df, name, hover_name):
     )
 
 
-@app.callback(
+@dash_app.callback(
     [Output('compound-plot', 'figure'),
      Output('final-balance-display', 'children'),
      Output('final-balance-display', 'style'),
@@ -228,6 +235,3 @@ def update_values(investmentTime, yieldRate, initialContribution, monthlyContrib
     }
 
     return {'data': traces, 'layout': layout}, final_balance_content, final_balance_style, comparison_content, comparison_style
-
-if __name__ == '__main__':
-    application.run_server(debug=False)

@@ -1,18 +1,13 @@
-from webapp import application
-
 import dash
-import dash_bootstrap_components as dbc
-from dash import dcc
-from dash import html
+from dash import dcc, html, dash_table, no_update
 from dash.dependencies import Input, Output, State
-from dash import dash_table
-from dash import no_update
-from flask import Flask, session
+import dash_bootstrap_components as dbc
+from flask import Blueprint, session
 import pandas as pd
 import numpy as np
-
-import plotly.graph_objects as go
 import plotly.express as px
+
+from webapp.helpers.app import create_dash_app
 
 # Global variable to store the investments
 investments = []
@@ -22,9 +17,15 @@ portfolioSettings = {
     'Investment Time (years)': 4
 }
 
+port_proj_bp = Blueprint('portfolio_projection', __name__)
 
 # Initialize Dash app with the existing Flask server
-dash_app = dash.Dash(__name__, server=application, external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix='/dash/portfolioProjection/')
+dash_app = create_dash_app(
+    server=port_proj_bp,
+    routes_pathname_prefix='/dash/portfolioProjection/',
+    title="Portfolio Projection",
+    name='portfolio_projection_dash',
+)
 
 TOOLTIP_STYLE = {"background-color": "black", "color": "white", "border-radius": "5px"}
 LABEL_STYLE = {'font-weight': 'bold'}
@@ -407,6 +408,3 @@ def calc_and_display_portfolio(n, investment_start_amount, investment_monthly_am
         line_chart_by_type, 
         line_chart_total
     ]
-
-if __name__ == '__main__':
-    application.run(debug=False)
