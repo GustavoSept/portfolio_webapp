@@ -1,0 +1,29 @@
+# General ignores
+.git
+.aws
+.coverage
+.coverage.*
+
+# Python related files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Python environments
+env_test*
+env_webPortfolio
+venv

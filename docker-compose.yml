@@ -1,0 +1,19 @@
+services:
+
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webapp
+    volumes:
+      - webapp_vol:/app
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 0.5G
+
+volumes:
+  webapp_vol:
