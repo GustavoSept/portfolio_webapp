@@ -235,5 +235,5 @@ def toggle_dropdown_state(n_clicks, data):
 
 
 if __name__ == '__main__':
-    application.run(debug=True)
+    application.run(debug=False)
 
