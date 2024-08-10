@@ -6,6 +6,8 @@ services:
     container_name: webapp
     volumes:
       - webapp_vol:/app/data
+      - ./webapp:/app/webapp
+
     ports:
       - "8000:8000"
     deploy:
