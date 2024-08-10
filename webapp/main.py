@@ -1,9 +1,7 @@
-from webapp.app import make_flask_app
+from webapp.app import flask_app
 
-from flask import Flask
 
-def main():
-    flask_app = make_flask_app()
+def main():    
     flask_app.run(
         debug=True,
         host='webapp',

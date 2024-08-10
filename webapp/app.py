@@ -2,7 +2,7 @@ import logging
 from flask import Flask
 from dotenv import load_dotenv
 
-from webapp.routes import main_bp
+from webapp.routes import main_bp, import_routes
 
 load_dotenv()
 
@@ -16,6 +16,8 @@ def make_flask_app():
 
     flask_app.config.from_prefixed_env()
 
+    import_routes()
+
     flask_app.register_blueprint(main_bp)
 
     for rule in flask_app.url_map.iter_rules():
@@ -24,3 +26,4 @@ def make_flask_app():
     return flask_app
 
 
+flask_app = make_flask_app()
