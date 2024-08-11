@@ -7,6 +7,8 @@ services:
     volumes:
       - webapp_vol:/app/data
       - ./webapp:/app/webapp
+    environment:
+      - DB_BASE_DIR=app/data
 
     ports:
       - "8000:8000"
