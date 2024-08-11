@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from dash import Dash, dcc, html, Input, Output, no_update
+from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 import sqlite3
 import os
@@ -121,17 +121,24 @@ def dash_educational_journey(flask_app):
     else:
         dash_app.layout = html.Div([
             dcc.Graph(id='cluster-plot', figure=create_cluster_plot(df), style={'height': '90vh'}),
+            html.Div(id='dummy-output', style={'display': 'none'}),
             dcc.Location(id='url', refresh=False)
         ])
 
-        @dash_app.callback(
-            Output('url', 'href'),
-            Input('cluster-plot', 'clickData'),
-            prevent_initial_call=True
+
+        # makes each dot clickable
+        dash_app.clientside_callback(
+            """
+            function(clickData) {
+                if (clickData && clickData.points && clickData.points.length > 0) {
+                    var url = clickData.points[0].customdata;
+                    window.open(url, '_blank');
+                }
+                return null;
+            }
+            """,
+            Output('dummy-output', 'children'),
+            Input('cluster-plot', 'clickData')
         )
-        def open_url(clickData):
-            if clickData is not None:
-                return clickData['points'][0]['customdata']
-            return no_update
 
     return dash_app
