@@ -5,11 +5,10 @@ import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
 
-from webapp.helpers.app import create_dash_app
-from webapp.app import flask_app
+from webapp.helpers.app import create_dash_app, get_flask_app
 
 dash_app = create_dash_app(
-    server=flask_app,
+    server=get_flask_app(),
     routes_pathname_prefix='/dash/compoundCalc/',
     title="Compound Calculator",
     name='compound_calculator_dash',

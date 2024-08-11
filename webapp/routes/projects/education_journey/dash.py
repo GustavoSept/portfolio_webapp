@@ -5,8 +5,7 @@ import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 
-from webapp.helpers.app import create_dash_app
-from webapp.app import flask_app
+from webapp.helpers.app import create_dash_app, get_flask_app
 
 logging.info("start of educationJourney.py was called")
 
@@ -100,7 +99,7 @@ def create_sunburst(df):
 # Create your Dash app
 
 dash_app = create_dash_app(
-    server=flask_app,
+    server=get_flask_app(),
     routes_pathname_prefix='/dash/educationJourney/',
     title="Educational Journey",
     name='educational_journey_dash'

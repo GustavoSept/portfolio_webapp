@@ -6,8 +6,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-from webapp.helpers.app import create_dash_app
-from webapp.app import flask_app
+from webapp.helpers.app import create_dash_app, get_flask_app
 
 # Global variable to store the investments
 investments = []
@@ -19,7 +18,7 @@ portfolioSettings = {
 
 # Initialize Dash app with the existing Flask server
 dash_app = create_dash_app(
-    server=flask_app,
+    server=get_flask_app(),
     routes_pathname_prefix='/dash/portfolioProjection/',
     title="Portfolio Projection",
     name='portfolio_projection_dash',

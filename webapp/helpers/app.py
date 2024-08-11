@@ -13,3 +13,7 @@ def create_dash_app(server, routes_pathname_prefix, title, name):
     dash_app.init_app(server)
     return dash_app
 
+def get_flask_app():
+    """Delayed flask_app import"""
+    from webapp.app import flask_app
+    return flask_app
