@@ -3,6 +3,8 @@ from flask import Flask
 from dotenv import load_dotenv
 
 from webapp.routes import main_bp, import_routes
+from webapp.routes.projects.portfolio_projection.dash import dash_portfolio_projection
+
 
 load_dotenv()
 
@@ -19,6 +21,8 @@ def make_flask_app():
     import_routes()
 
     flask_app.register_blueprint(main_bp)
+
+    dash_portfolio_projection(flask_app)
 
     for rule in flask_app.url_map.iter_rules():
         print(f"Endpoint: {rule.endpoint}\n Route: {rule.rule}\n Methods: {rule.methods}\n\n")
