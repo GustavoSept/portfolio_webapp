@@ -5,7 +5,7 @@ from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 import sqlite3
 import os
-from webapp.helpers.db import should_fetch_df, save_df_to_sqlite
+from webapp.helpers.db import should_fetch_df, save_df_to_sqlite, get_data_from_sqlite
 
 # Helper function to assign colors based on Group and Level
 def assign_color(row):
@@ -24,7 +24,10 @@ def assign_color(row):
     shade = level_shades[row['Level']]
     return f"rgb({int(base_color[0]*shade)}, {int(base_color[1]*shade)}, {int(base_color[2]*shade)})"
 
-def preprocess_data(df):
+# TODO: generate the actual logic to cluster these
+# To be efficient, we should only embed each row once, and calculate clusters on every update
+def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate clusters in the data"""
     # Assign cluster based on Group
     df['cluster'] = df['Group'].astype('category').cat.codes
     
@@ -75,7 +78,7 @@ def create_cluster_plot(df):
 
     return fig
 
-def fetch_and_process_data():
+def fetch_and_process_data() -> pd.DataFrame:
     url = 'https://docs.google.com/spreadsheets/d/17_Eq4kJ6LE4hVF-kaa6P6YOy07bukCtQuMHYcNYLjWc/export?format=csv'
     df = pd.read_csv(url)
     
@@ -90,12 +93,7 @@ def fetch_and_process_data():
     save_df_to_sqlite(df)
     return df
 
-def get_data_from_sqlite():
-    BASE_DIR = os.getenv('DB_BASE_DIR')
-    db_path = os.path.join(BASE_DIR, 'education_journey.db')
-    with sqlite3.connect(db_path) as conn:
-        df = pd.read_sql_query("SELECT * FROM education_journey", conn)
-    return preprocess_data(df)
+
 
 def dash_educational_journey(flask_app):
     dash_app = Dash(
@@ -110,7 +108,7 @@ def dash_educational_journey(flask_app):
     if should_fetch_df():
         df = fetch_and_process_data()
     else:
-        df = get_data_from_sqlite()
+        df = preprocess_data(get_data_from_sqlite(database='education_journey.db', table_name='education_journey'))
 
     # Add error handling for empty DataFrame
     if df.empty:

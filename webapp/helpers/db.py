@@ -19,6 +19,14 @@ def save_df_to_sqlite(df: pd.DataFrame, table_name: str = 'education_journey'):
     with sqlite3.connect(db_path) as conn:
         df.to_sql(table_name, conn, if_exists='replace', index=False)
 
+def get_data_from_sqlite(database: str, table_name: str) -> pd.DataFrame:
+    BASE_DIR = os.getenv('DB_BASE_DIR')
+    db_path = os.path.join(BASE_DIR, database)
+    
+    with sqlite3.connect(db_path) as conn:
+        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+        
+    return df
 
 def should_fetch_df(check_every=15, database_name='education_journey.db') -> bool:
     """
