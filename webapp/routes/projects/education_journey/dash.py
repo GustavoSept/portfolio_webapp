@@ -1,123 +1,137 @@
-import os
-import sqlite3
-from dash import Dash, dcc, html
-
 import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+from dash import Dash, dcc, html, Input, Output, no_update
 import dash_bootstrap_components as dbc
-
-from .callbacks import DashCallbacks
+import sqlite3
+import os
 from webapp.helpers.db import should_fetch_df, save_df_to_sqlite
 
-def fetch_and_process_data() -> pd.DataFrame:
+# Helper function to assign colors based on Group and Level
+def assign_color(row):
+    group_colors = {
+        'Software Eng & CS': (0, 0, 255),  # Blue
+        'Data Eng & Science': (128, 0, 128),  # Purple
+        'Math': (255, 255, 0),  # Yellow
+        'Management & Self-Mastery': (64, 224, 208)  # Turquoise
+    }
+    level_shades = {
+        'Introductory': 0.3,
+        'Fundamentals': 0.6,
+        'Applied': 0.9
+    }
+    base_color = group_colors[row['Group']]
+    shade = level_shades[row['Level']]
+    return f"rgb({int(base_color[0]*shade)}, {int(base_color[1]*shade)}, {int(base_color[2]*shade)})"
+
+def preprocess_data(df):
+    # Assign cluster based on Group
+    df['cluster'] = df['Group'].astype('category').cat.codes
+    
+    # Generate random positions within each cluster
+    df['x'] = df.apply(lambda row: np.random.normal(row['cluster'] * 5, 1), axis=1)
+    df['y'] = df.apply(lambda row: np.random.normal(row['cluster'] * 5, 1), axis=1)
+    
+    # Assign colors
+    df['color'] = df.apply(assign_color, axis=1)
+    
+    return df
+
+def create_cluster_plot(df):
+    fig = go.Figure()
+
+    for group in df['Group'].unique():
+        group_data = df[df['Group'] == group]
+        
+        fig.add_trace(go.Scatter(
+            x=group_data['x'],
+            y=group_data['y'],
+            mode='markers',
+            marker=dict(
+                size=group_data['Time (in hours)'],
+                sizemode='area',
+                sizeref=2.*max(df['Time (in hours)'])/(40.**2),
+                sizemin=4,
+                color=group_data['color']
+            ),
+            text=group_data.apply(
+                lambda row: f"<b>{row['Specific Content']}</b><br>{row['Group']}//{row['SubGroup']}<br>"
+                            f"Institution: {row['Institution']}<br>Time: {row['Time (in hours)']} hours<br>"
+                            f"Language: {row['Language']}<br>Level: {row['Level']}",
+                axis=1
+            ),
+            hoverinfo='text',
+            name=group,
+            customdata=group_data['Source Link']
+        ))
+
+    fig.update_layout(
+        title="",
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        showlegend=True,
+        hovermode='closest'
+    )
+
+    return fig
+
+def fetch_and_process_data():
     url = 'https://docs.google.com/spreadsheets/d/17_Eq4kJ6LE4hVF-kaa6P6YOy07bukCtQuMHYcNYLjWc/export?format=csv'
     df = pd.read_csv(url)
-    df = df[df['Specific Content'].notna()] # deleting rows with NaN values
-    df = preprocess_labels(df, 'Label')
+    
+    # Crop the DataFrame to the last valid row based on 'Label' column
+    last_valid_index = df['Label'].last_valid_index()
+    df = df.loc[:last_valid_index].reset_index(drop=True)
+    
+    # Fill NaN values in 'Group' column with a placeholder
+    df['Group'] = df['Group'].fillna('Uncategorized')
+    
+    df = preprocess_data(df)
     save_df_to_sqlite(df)
     return df
 
-def get_data_from_sqlite() -> pd.DataFrame:
+def get_data_from_sqlite():
     BASE_DIR = os.getenv('DB_BASE_DIR')
     db_path = os.path.join(BASE_DIR, 'education_journey.db')
     with sqlite3.connect(db_path) as conn:
         df = pd.read_sql_query("SELECT * FROM education_journey", conn)
-    return df
-
-def preprocess_labels(df: pd.DataFrame, column_name: str) -> pd.DataFrame:
-    """Preprocesses the labels in the specified column by appending numeric suffixes to duplicate labels"""
-    label_counts = df[column_name].value_counts()
-    for label, count in label_counts.items():
-        if count > 1:
-            label_rows = df[df[column_name] == label]
-            new_labels = [f"{i+1}_{label}" for i in range(count)]
-            df.loc[label_rows.index, column_name] = new_labels
-    return df
+    return preprocess_data(df)
 
 def dash_educational_journey(flask_app):
     dash_app = Dash(
-            __name__,
-            server=flask_app,
-            external_stylesheets=[dbc.themes.BOOTSTRAP],
-            routes_pathname_prefix="/dash/educationJourney/",
-            suppress_callback_exceptions=True,
-            )
+        __name__,
+        server=flask_app,
+        external_stylesheets=[dbc.themes.BOOTSTRAP],
+        routes_pathname_prefix="/dash/educationJourney/",
+        suppress_callback_exceptions=True,
+    )
 
-
+    # Load and preprocess data
     if should_fetch_df():
         df = fetch_and_process_data()
     else:
         df = get_data_from_sqlite()
 
-    HOURS_STUDIED = int(df['Time (in hours)'].sum())
-    UNIQUE_INSTITUTIONS = df['Institution'].unique()
+    # Add error handling for empty DataFrame
+    if df.empty:
+        dash_app.layout = html.Div([
+            html.H1("Error: No data available"),
+            html.P("Please check the data source and try again.")
+        ])
+    else:
+        dash_app.layout = html.Div([
+            dcc.Graph(id='cluster-plot', figure=create_cluster_plot(df), style={'height': '90vh'}),
+            dcc.Location(id='url', refresh=False)
+        ])
 
-    # checklist to filter data between institutions
-    checklist = dcc.Checklist(
-        id='institution-checklist',
-        options=[{'label': i, 'value': i} for i in UNIQUE_INSTITUTIONS],
-        value=list(UNIQUE_INSTITUTIONS),  # Initially, all options are selected
-        inline=False
-    )
+        @dash_app.callback(
+            Output('url', 'href'),
+            Input('cluster-plot', 'clickData'),
+            prevent_initial_call=True
+        )
+        def open_url(clickData):
+            if clickData is not None:
+                return clickData['points'][0]['customdata']
+            return no_update
 
-    toggle_button = dbc.Button(
-        "Filter by Institutions",
-        id='toggle-button',
-        n_clicks=0,
-        color="primary",  # Bootstrap color style
-        className="me-1",  # Bootstrap spacing class (margin end)
-        style={'width': 'auto', 'height': 'auto'}
-    )
-
-
-    checklist_div = html.Div(
-        id='checklist-div',
-        children=[
-            html.Div([checklist], style={'text-align': 'left', 'margin-left': '35%'})
-        ],
-        style={'display': 'none'}  # Keeping the initially hidden property
-    )
-
-
-    dash_app.layout = html.Div([
-        dbc.Row([
-            html.H1("My Personal Learning Journey"),
-            dbc.Col([  # Column 1 with responsive width
-                html.H3([
-                    "Studied for ",
-                    html.Span(f"{HOURS_STUDIED} hours", style={'color': '#0077b6', 'font-weight': 'bold', 'font-size': 'larger'}),
-                    " in total."
-                ]),
-                html.P([
-                    "Check my ",
-                    html.A("Notion Wiki", href="https://gustavosept.notion.site/gustavosept/Studies-d197367eb0284ebeb86ed1ae194d45d6", style={'font-weight': 'bold'}, target="_blank"),
-                    " for in-depth material."
-                ], style={'margin-top': '10px'})
-            ], lg=6, md=12),  # Larger screens get a half width, smaller screens full width
-            dbc.Col([  # Column 2 with responsive width
-                html.Div([
-                    toggle_button,
-                    checklist_div,
-                    html.Div([
-                        html.Label('Click chart to filter groups'),
-                        html.Br(),
-                        html.Label('and access source material.'),
-                    ], style={
-                        'font-style': 'italic',
-                        'color': 'grey',
-                        'font-size': 'smaller'
-                    })
-                ], style={'text-align': 'right'})
-            ], lg=6, md=12)  # Same as above
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(id='sunburst-chart', style={'width': '100%', 'height': '80vh'})
-            ])
-        ]),
-        dcc.Store(id='store-url'),
-        html.Div(id='hidden-div', style={'display': 'none'}, children='init'),
-        html.Div(id='dummy-div', style={'display': 'none'})
-    ], style={'max-width': '100vw', 'overflow-x': 'hidden'})
-
-    DashCallbacks(dash_app, df)
-
+    return dash_app
