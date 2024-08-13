@@ -15,6 +15,8 @@ env_test*
 env_webPortfolio
 venv
 
+# Local ML models
+local_models
 
 ### PyCharm+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
@@ -260,10 +262,6 @@ pyrightconfig.json
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,pycharm+all,python,pythonvanilla
-/src/SuperGraph_service/agents/SoundToText/1-audio_to_txt.py
-/src/SuperGraph_service/agents/SoundToText/models/
-/audios_teste
-/src/SuperGraph_service/agents/SoundToText/temporary/
 
 # Ignore Pycharm files
 *.xml

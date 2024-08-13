@@ -1,10 +1,18 @@
+from sentence_transformers import SentenceTransformer
+import chromadb
+from chromadb.config import Settings
+
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
+import sqlite3
+import hashlib
 
 from webapp.helpers.db import should_fetch_df, save_df_to_sqlite, get_data_from_sqlite
+
+MODEL_NAME = "all-MiniLM-L6-v2"
 
 # Helper function to assign colors based on Group and Level
 def assign_color(row):
@@ -77,6 +85,95 @@ def create_cluster_plot(df):
 
     return fig
 
+def get_row_hash(row):
+    """Generate a hash for a row to track changes"""
+    return hashlib.md5(str(row.values).encode()).hexdigest()
+
+def get_vectorized_rows():
+    """Retrieve the list of vectorized row hashes from SQLite"""
+    conn = sqlite3.connect('education_journey.db')
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS vectorized_rows
+                      (row_hash TEXT PRIMARY KEY)''')
+    cursor.execute("SELECT row_hash FROM vectorized_rows")
+    vectorized_hashes = set(row[0] for row in cursor.fetchall())
+    conn.close()
+    return vectorized_hashes
+
+def update_vectorized_rows(new_hashes):
+    """Update the list of vectorized row hashes in SQLite"""
+    conn = sqlite3.connect('education_journey.db')
+    cursor = conn.cursor()
+    cursor.executemany("INSERT OR IGNORE INTO vectorized_rows (row_hash) VALUES (?)",
+                       [(hash,) for hash in new_hashes])
+    conn.commit()
+    conn.close()
+
+def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 3) -> None:
+    """Vectorize each row of the DataFrame and store in ChromaDB in smaller batches"""
+    model = SentenceTransformer(MODEL_NAME)
+    
+    # Set tokenizer attribute
+    if hasattr(model, 'tokenizer') and hasattr(model.tokenizer, 'clean_up_tokenization_spaces'):
+        model.tokenizer.clean_up_tokenization_spaces = False
+    
+    chroma_client = chromadb.Client(Settings(persist_directory="./chroma_db"))
+    collection = chroma_client.get_or_create_collection(name="education_journey")
+    vectorized_hashes = get_vectorized_rows()
+    
+    new_data = []
+    new_hashes = set()
+    
+    for idx, row in df.iterrows():
+        row_hash = get_row_hash(row)
+        if row_hash not in vectorized_hashes:
+            document = ' '.join(row.astype(str))
+            new_data.append({
+                'id': str(idx),
+                'document': document,
+                'metadata': row.to_dict(),
+                'hash': row_hash
+            })
+            new_hashes.add(row_hash)
+    
+    if new_data:
+        # Process in smaller batches
+        for i in range(0, len(new_data), batch_size):
+            batch = new_data[i:i + batch_size]
+            print(f"Processing batch {i}...")
+            embeddings = model.encode([item['document'] for item in batch])
+            collection.add(
+                ids=[item['id'] for item in batch],
+                embeddings=embeddings.tolist(),
+                metadatas=[item['metadata'] for item in batch],
+                documents=[item['document'] for item in batch]
+            )
+        
+        update_vectorized_rows(new_hashes)
+
+
+def similarity_search(query: str, n_results: int = 5) -> list:
+    """Perform a similarity search using the vectorized data"""
+    model = SentenceTransformer(MODEL_NAME)
+    
+    # Set tokenizer attribute
+    if hasattr(model, 'tokenizer') and hasattr(model.tokenizer, 'clean_up_tokenization_spaces'):
+        model.tokenizer.clean_up_tokenization_spaces = False
+    
+    chroma_client = chromadb.Client(Settings(persist_directory="./chroma_db"))
+    collection = chroma_client.get_collection(name="education_journey")
+    
+    # Vectorize the query
+    query_embedding = model.encode(query).tolist()
+    
+    # Perform the search
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=n_results
+    )
+    
+    return results
+
 def fetch_and_process_data() -> pd.DataFrame:
     url = 'https://docs.google.com/spreadsheets/d/17_Eq4kJ6LE4hVF-kaa6P6YOy07bukCtQuMHYcNYLjWc/export?format=csv'
     df = pd.read_csv(url)
@@ -90,9 +187,11 @@ def fetch_and_process_data() -> pd.DataFrame:
     
     df = preprocess_data(df)
     save_df_to_sqlite(df)
+    
+    # Vectorize and store data in ChromaDB
+    vectorize_and_store_data(df)
+    
     return df
-
-
 
 def dash_educational_journey(flask_app):
     dash_app = Dash(
@@ -108,6 +207,8 @@ def dash_educational_journey(flask_app):
         df = fetch_and_process_data()
     else:
         df = preprocess_data(get_data_from_sqlite(database='education_journey.db', table_name='education_journey'))
+        # Ensure vectorized data is up to date
+        vectorize_and_store_data(df)
 
     # Add error handling for empty DataFrame
     if df.empty:
