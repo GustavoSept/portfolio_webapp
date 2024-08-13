@@ -3,8 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
-import sqlite3
-import os
+
 from webapp.helpers.db import should_fetch_df, save_df_to_sqlite, get_data_from_sqlite
 
 # Helper function to assign colors based on Group and Level

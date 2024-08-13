@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from webapp.routes import main_bp, import_routes
 from webapp.routes.projects.portfolio_projection.dash import dash_portfolio_projection
 from webapp.routes.projects.education_journey.dash import dash_educational_journey
+from webapp.routes.projects.compound_interest.dash import dash_compound_calc
 
 
 load_dotenv()
@@ -25,6 +26,7 @@ def make_flask_app():
 
     dash_portfolio_projection(flask_app)
     dash_educational_journey(flask_app)
+    dash_compound_calc(flask_app)
     
     return flask_app
 
