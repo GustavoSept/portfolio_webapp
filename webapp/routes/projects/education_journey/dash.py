@@ -151,7 +151,7 @@ def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 32) -> None:
             new_data.append({
                 'id': str(idx),
                 'document': document,
-                'metadata': row.to_dict(),
+                'metadata': clean_metadata(row.to_dict()),  # Clean the metadata
                 'hash': row_hash
             })
             new_hashes.add(row_hash)
@@ -165,15 +165,17 @@ def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 32) -> None:
             documents = [item['document'] for item in batch]
             embeddings = get_embeddings(documents)
             
-            collection.add(
-                ids=[item['id'] for item in batch],
-                embeddings=embeddings,
-                metadatas=[item['metadata'] for item in batch],
-                documents=documents
-            )
+            try:
+                collection.add(
+                    ids=[item['id'] for item in batch],
+                    embeddings=embeddings,
+                    metadatas=[item['metadata'] for item in batch],
+                    documents=documents
+                )
+            except Exception as e:
+                logging.error(f"Error adding batch to collection: {e}")
         
         update_vectorized_rows(new_hashes)
-
 
 def similarity_search(query: str, n_results: int = 5) -> list:
     """Perform a similarity search using the vectorized data"""

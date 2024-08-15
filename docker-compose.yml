@@ -11,14 +11,15 @@ services:
       - DB_BASE_DIR=app/data
 
     ports:
-      - "8000:8000"
+      - "${WEBAPP_PORT}:${WEBAPP_PORT}"
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 0.5G
     networks:
-      - webapp_network
+      webapp_network:
+        ipv4_address: ${WEBAPP_IP}
 
 volumes:
   webapp_vol:
@@ -26,3 +27,6 @@ volumes:
 networks:
   webapp_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
