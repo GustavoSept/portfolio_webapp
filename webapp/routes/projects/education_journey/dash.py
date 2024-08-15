@@ -1,4 +1,6 @@
-from sentence_transformers import SentenceTransformer
+import os
+import requests
+import logging
 import chromadb
 from chromadb.config import Settings
 
@@ -12,10 +14,28 @@ import hashlib
 
 from webapp.helpers.db import should_fetch_df, save_df_to_sqlite, get_data_from_sqlite
 
-MODEL_NAME = "all-MiniLM-L6-v2"
+DB_BASE_DIR = os.getenv("DB_BASE_DIR")
 
-# Helper function to assign colors based on Group and Level
+def clean_metadata(metadata: dict):
+    """Clean metadata to ensure all values are of accepted types"""
+    return {k: str(v) if v is not None else "" for k, v in metadata.items()}
+
+def get_embeddings(texts):
+    api_key = os.getenv("OPENAI_API_KEY")
+    url = "https://api.openai.com/v1/embeddings"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "input": texts,
+        "model": "text-embedding-3-small"
+    }
+    response = requests.post(url, headers=headers, json=data)
+    return [item['embedding'] for item in response.json()['data']]
+
 def assign_color(row):
+    """Helper function to assign colors based on Group and Level"""
     group_colors = {
         'Software Eng & CS': (0, 0, 255),  # Blue
         'Data Eng & Science': (128, 0, 128),  # Purple
@@ -35,6 +55,7 @@ def assign_color(row):
 # To be efficient, we should only embed each row once, and calculate clusters on every update
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate clusters in the data"""
+    logging.debug("education_journey > preprocess_data | Running...")
     # Assign cluster based on Group
     df['cluster'] = df['Group'].astype('category').cat.codes
     
@@ -91,6 +112,7 @@ def get_row_hash(row):
 
 def get_vectorized_rows():
     """Retrieve the list of vectorized row hashes from SQLite"""
+    logging.debug("education_journey > get_vectorized_rows | Running...")
     conn = sqlite3.connect('education_journey.db')
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS vectorized_rows
@@ -102,6 +124,7 @@ def get_vectorized_rows():
 
 def update_vectorized_rows(new_hashes):
     """Update the list of vectorized row hashes in SQLite"""
+    logging.debug("education_journey > update_vectorized_rows | Running...")
     conn = sqlite3.connect('education_journey.db')
     cursor = conn.cursor()
     cursor.executemany("INSERT OR IGNORE INTO vectorized_rows (row_hash) VALUES (?)",
@@ -109,15 +132,12 @@ def update_vectorized_rows(new_hashes):
     conn.commit()
     conn.close()
 
-def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 3) -> None:
-    """Vectorize each row of the DataFrame and store in ChromaDB in smaller batches"""
-    model = SentenceTransformer(MODEL_NAME)
+def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 32) -> None:
+    """Vectorize each row of the DataFrame and store in ChromaDB in batches"""
+    logging.debug(f"education_journey > vectorize_and_store_data | Running...{df.info() = }")
     
-    # Set tokenizer attribute
-    if hasattr(model, 'tokenizer') and hasattr(model.tokenizer, 'clean_up_tokenization_spaces'):
-        model.tokenizer.clean_up_tokenization_spaces = False
-    
-    chroma_client = chromadb.Client(Settings(persist_directory="./chroma_db"))
+    DB_BASE_DIR = os.getenv("DB_BASE_DIR")
+    chroma_client = chromadb.Client(Settings(persist_directory=os.path.join(DB_BASE_DIR,"chroma_db")))
     collection = chroma_client.get_or_create_collection(name="education_journey")
     vectorized_hashes = get_vectorized_rows()
     
@@ -137,16 +157,19 @@ def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 3) -> None:
             new_hashes.add(row_hash)
     
     if new_data:
-        # Process in smaller batches
+        # Process in batches
         for i in range(0, len(new_data), batch_size):
             batch = new_data[i:i + batch_size]
-            print(f"Processing batch {i}...")
-            embeddings = model.encode([item['document'] for item in batch])
+            logging.debug(f"education_journey > vectorize_and_store_data | Processing batch {i // batch_size + 1} (row #{i})...")
+            
+            documents = [item['document'] for item in batch]
+            embeddings = get_embeddings(documents)
+            
             collection.add(
                 ids=[item['id'] for item in batch],
-                embeddings=embeddings.tolist(),
+                embeddings=embeddings,
                 metadatas=[item['metadata'] for item in batch],
-                documents=[item['document'] for item in batch]
+                documents=documents
             )
         
         update_vectorized_rows(new_hashes)
@@ -154,17 +177,13 @@ def vectorize_and_store_data(df: pd.DataFrame, batch_size: int = 3) -> None:
 
 def similarity_search(query: str, n_results: int = 5) -> list:
     """Perform a similarity search using the vectorized data"""
-    model = SentenceTransformer(MODEL_NAME)
+    logging.debug("education_journey > similarity_search | Running...")
     
-    # Set tokenizer attribute
-    if hasattr(model, 'tokenizer') and hasattr(model.tokenizer, 'clean_up_tokenization_spaces'):
-        model.tokenizer.clean_up_tokenization_spaces = False
-    
-    chroma_client = chromadb.Client(Settings(persist_directory="./chroma_db"))
+    chroma_client = chromadb.Client(Settings(persist_directory=os.path.join(DB_BASE_DIR,"chroma_db")))
     collection = chroma_client.get_collection(name="education_journey")
     
-    # Vectorize the query
-    query_embedding = model.encode(query).tolist()
+    # Get embedding for the query
+    query_embedding = get_embeddings([query])
     
     # Perform the search
     results = collection.query(
@@ -172,9 +191,12 @@ def similarity_search(query: str, n_results: int = 5) -> list:
         n_results=n_results
     )
     
+    logging.debug(f"education_journey > similarity_search | Got {len(results)} results from query ('{query}')...")
     return results
 
 def fetch_and_process_data() -> pd.DataFrame:
+    logging.debug(f"education_journey > fetch_and_process_data | running... ")
+    
     url = 'https://docs.google.com/spreadsheets/d/17_Eq4kJ6LE4hVF-kaa6P6YOy07bukCtQuMHYcNYLjWc/export?format=csv'
     df = pd.read_csv(url)
     
